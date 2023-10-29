@@ -7,7 +7,7 @@
 #include "sha1.h"
 #include "TOTP.h"
 // My file:
-#include "dataConverter.h"
+#include "src/dataConverter.h"
 
 
 // ******************************************************************
@@ -33,7 +33,7 @@ void setup() {
   rtc.stopRTC();
 
   rtc.setDate(29, 10, 2023);
-  rtc.setTime(15, 45, 30);  // GMT
+  rtc.setTime(16, 25, 30);  // GMT
   rtc.startRTC();
 }
 
