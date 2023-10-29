@@ -3,7 +3,8 @@
 */
 
 // Arduino lib:
-#include "swRTC.h"
+#include <Wire.h>
+#include <DS3231.h>
 #include "sha1.h"
 #include "TOTP.h"
 // My file:
@@ -22,23 +23,16 @@ String keysDB[2] {"JV4VG2LNOBWGKU3FMNZGK5CUPB2EWZLZ",   // "MySimpleSecretTxtKey
 
 
 // ******************************************************************
-swRTC rtc;                      // TODO: To delete
+RTClib myRTC;
 
 
 void setup() {
   Serial.begin(9600);
-
-  
-  // Hard-code setting of the current GMT time
-  rtc.stopRTC();
-
-  rtc.setDate(29, 10, 2023);
-  rtc.setTime(16, 25, 30);  // GMT
-  rtc.startRTC();
+  Wire.begin();
 }
 
 
-void loop() {
+void loop() {  
   // Choose a key:
   String usedPrivKey {keysDB[0]};   // TODO: Hard-code key index
 
@@ -49,43 +43,26 @@ void loop() {
   char code[7];
 
 
-  // Get Unix TimesSteps: 
-  long GMT = rtc.getTimestamp();
-
-  printTime(&rtc);
+  // RTC:
+  DateTime now {myRTC.now()};   // Get current time from RTC module
+  long UnixTimeStep {now.unixtime()};
+  //   UTC = CET(summer_time) - 2h
+  long UTC {UnixTimeStep - (2*60*60)};
 
   Serial.print("TIME: ");
-  Serial.println(GMT);
+  Serial.println(UTC);
 
 
-  char* newCode {totp.getCode(GMT)};  // Generate new token
+  char* newCode {totp.getCode(UTC)};  // Generate new token
 
-  // Print it
+  // Print token
   if (strcmp(code, newCode) != 0) {
     strcpy(code, newCode);
-    Serial.print("Key: ");
+    Serial.print("Token: ");
     Serial.println(code);
   }
 
 
   Serial.println("===========================");
   delay(30000);  // TODO: Hard-code 30 seconds
-}
-
-
-// ******************************************************************
-// Function def:
-void printTime(swRTC* rtc) {
-  Serial.print("Clock: ");
-  Serial.print(rtc->getDay());
-  Serial.print('-');
-  Serial.print(rtc->getMonth());
-  Serial.print('-');
-  Serial.print(rtc->getYear());
-  Serial.print(' ');
-  Serial.print(rtc->getHours());
-  Serial.print(':');
-  Serial.print(rtc->getMinutes());
-  Serial.print(':');
-  Serial.println(rtc->getSeconds());
 }
