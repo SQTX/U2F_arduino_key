@@ -14,6 +14,7 @@
 // ******************************************************************
 // Configuration:
 // constexpr uint8_t KEY_SIZE = 30;   // Moved to dataConverter.h
+  constexpr int8_t RTC_OFFSET = 5;   // Time difference between the real time time and the RTC module [in seconds]: (Real_time - RTC)
 
 
 // ******************************************************************
@@ -46,8 +47,8 @@ void loop() {
   // RTC:
   DateTime now {myRTC.now()};   // Get current time from RTC module
   long UnixTimeStep {now.unixtime()};
-  //   UTC = CET(summer_time) - 2h
-  long UTC {UnixTimeStep - (2*60*60)};
+  //   UTC = CET(summer_time) - 2h + RTC_OFFSET
+  long UTC {UnixTimeStep - (2*60*60) + RTC_OFFSET};
 
   Serial.print("TIME: ");
   Serial.println(UTC);
@@ -61,8 +62,10 @@ void loop() {
     Serial.print("Token: ");
     Serial.println(code);
   }
-
-
   Serial.println("===========================");
-  delay(30000);  // TODO: Hard-code 30 seconds
+
+
+  // Dynamic refresh (Always every 00' and 30' seconds)
+  uint16_t restTime {(30 - (UTC % 30)) * 1000};
+  delay(restTime);
 }
