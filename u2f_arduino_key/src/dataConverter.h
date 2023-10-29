@@ -1,6 +1,6 @@
 /*
  * Created by Jakub SQTX Sitarczyk on 28/10/2023.
-*/
+ * */
 
 #ifndef U2F_ARDUINO_KEY_DATACONVERTER_H
 #define U2F_ARDUINO_KEY_DATACONVERTER_H

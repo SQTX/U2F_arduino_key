@@ -1,6 +1,6 @@
 /*
  * Created by Jakub SQTX Sitarczyk on 21/10/2023.
-*/
+ * */
 
 // Arduino lib:
 #include <Wire.h>
@@ -13,8 +13,17 @@
 
 // ******************************************************************
 // Configuration:
-// constexpr uint8_t KEY_SIZE = 30;   // Moved to dataConverter.h
-  constexpr int8_t RTC_OFFSET = 5;   // Time difference between the real time time and the RTC module [in seconds]: (Real_time - RTC)
+// constexpr uint8_t KEY_SIZE {30};       //TODO:  Moved to dataConverter.h
+
+  /* The hour difference between the time zone set to RTC and the UTC time zone [in hours]:
+   * CET(summer_time) - UTC = 2 [h]
+   * */
+  constexpr int8_t TIME_ZONE_OFFSET {2};
+  /* Time difference between the RTC module time and the real time [in seconds]:
+   * 1698601110 - 1698601115 = -5 [s]
+   * */
+  constexpr int8_t RTC_OFFSET {-5};       //
+                                          //
 
 
 // ******************************************************************
@@ -24,6 +33,10 @@ String keysDB[2] {"JV4VG2LNOBWGKU3FMNZGK5CUPB2EWZLZ",   // "MySimpleSecretTxtKey
 
 
 // ******************************************************************
+/* Using the DS3231 RTC module requires its prior configuration and setting of the current time
+ * from which the RTC will constantly count up. For this, you can use the DS3231.h library and
+ * the DS3231_set example.
+ * */
 RTClib myRTC;
 
 
@@ -44,14 +57,14 @@ void loop() {
   char code[7];
 
 
-  // RTC:
-  DateTime now {myRTC.now()};   // Get current time from RTC module
-  long UnixTimeStep {now.unixtime()};
-  //   UTC = CET(summer_time) - 2h + RTC_OFFSET
-  long UTC {UnixTimeStep - (2*60*60) + RTC_OFFSET};
+  // Get currently time from RTC module:
+  DateTime now {myRTC.now()};           // Get current time
+  long UnixTimeStep {now.unixtime()};   // Replacement in Unix TimeStamp
+  //   UTC = (local_time - TIME_ZONE_OFFSET - RTC_OFFSET)
+  long UTC {UnixTimeStep - (TIME_ZONE_OFFSET*60*60) - RTC_OFFSET};
 
-  Serial.print("TIME: ");
-  Serial.println(UTC);
+//  Serial.print("TIME: ");
+//  Serial.println(UTC);
 
 
   char* newCode {totp.getCode(UTC)};  // Generate new token
@@ -62,7 +75,7 @@ void loop() {
     Serial.print("Token: ");
     Serial.println(code);
   }
-  Serial.println("===========================");
+  Serial.println("==============");
 
 
   // Dynamic refresh (Always every 00' and 30' seconds)

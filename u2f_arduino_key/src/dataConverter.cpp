@@ -1,8 +1,9 @@
 /*
  * Created by Jakub SQTX Sitarczyk on 28/10/2023.
-*/
+ * */
 
 #include "dataConverter.h"
+
 
 String Converter::convBase32ToTxt(String* in) {
   String out {};
