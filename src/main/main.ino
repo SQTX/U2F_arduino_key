@@ -1,31 +1,83 @@
+#include "swRTC.h"
 #include "sha1.h"
 #include "TOTP.h"
-#include "swRTC.h"
+#include "Base32-Decode.h"
 
-// TODO: Hard-code private key.
 
-// TxT Key: MySimpleSecretTxtKey
-// Base32:  JV4VG2LNOBWGKU3FMNZGK5CUPB2EWZLZ
-// Hex:     4d7953696d706c655365637265745478744b6579
+// ******************************************************************
+// Configuration:
+constexpr uint8_t KEY_SIZE = 30;
 
-uint8_t hmacKey[] {0x4d, 0x79, 0x53, 0x69, 0x6d, 0x70, 0x6c, 0x65, 0x53, 0x65, 0x63, 0x72, 0x65, 0x74, 0x54, 0x78, 0x74, 0x4b, 0x65, 0x79};
 
-TOTP totp = TOTP(hmacKey, 20);  // hmacKey length
+// ******************************************************************
+// Function dec:
+void printTime(swRTC*);
+String convBase32ToTxt(String);
+uint8_t* convStrToNumArr(String*);
+
+
+// ******************************************************************
+// Example database with Base32 format keys:
+String keysDB[2] {"JV4VG2LNOBWGKU3FMNZGK5CUPB2EWZLZ",
+                  "IFBEGRBRGIZQ===="};
+
+// Txt keys: "MySimpleSecretTxtKey", "ABCD123"
+
+
+// ******************************************************************
 swRTC rtc;                      // TODO: To delete
-char code[7];
 
 
 void setup() {
   Serial.begin(9600);
 
+  // Hard-code setting of the current GMT time
   rtc.stopRTC();
-  // TODO: Hard-code time. RTC is needed!
-  rtc.setDate(28, 10, 2023);
-  rtc.setTime(19, 24, 0);     // GMT
+
+  rtc.setDate(29, 10, 2023);
+  rtc.setTime(14, 34, 30);  // GMT
   rtc.startRTC();
 }
 
-void printTime(swRTC *rtc) {
+
+void loop() {
+  // Choose a key:
+  String usedPrivKey {keysDB[0]};   // TODO: Hard-code key index
+
+  String txtKey {convBase32ToTxt(usedPrivKey)};
+  uint8_t* hmacKey {convStrToNumArr(&txtKey)};
+  TOTP totp = TOTP(hmacKey, 20);    // TODO: Hard-code size of key
+
+  char code[7];
+
+
+  // Get Unix TimesSteps: 
+  long GMT = rtc.getTimestamp();
+
+  printTime(&rtc);
+
+  Serial.print("TIME: ");
+  Serial.println(GMT);
+
+
+  char* newCode = totp.getCode(GMT);  // Generate new token
+
+  // Print it
+  if (strcmp(code, newCode) != 0) {
+    strcpy(code, newCode);
+    Serial.print("Key: ");
+    Serial.println(code);
+  }
+
+
+  Serial.println("===========================");
+  delay(30000);  // TODO: Hard-code 30 seconds
+}
+
+
+// ******************************************************************
+// Function def:
+void printTime(swRTC* rtc) {
   Serial.print("Clock: ");
   Serial.print(rtc->getDay());
   Serial.print('-');
@@ -40,23 +92,24 @@ void printTime(swRTC *rtc) {
   Serial.println(rtc->getSeconds());
 }
 
-void loop() {
-  printTime(&rtc);
+String convBase32ToTxt(String in) {
+  String out;
 
-  long GMT = rtc.getTimestamp();
+  int r = base32decodeToString(in, out);
+  if (r < 0) {
+    Serial.println("Could not decode string");
+    return;
+  }
+  
+  return out;
+}
 
-  Serial.print("TIME: ");
-  Serial.println(GMT);
+uint8_t* convStrToNumArr(String* txt) {
+  static uint8_t NumArr[KEY_SIZE]{};
 
-  char* newCode = totp.getCode(GMT);
-  if(strcmp(code, newCode) != 0) {
-    strcpy(code, newCode);
-    Serial.print("Key: ");
-    Serial.println(code);
-  } 
-
-  Serial.println("=====================");
-
-
-  delay(30000);   // 30 seconds
+  for (uint8_t i = 0; i < KEY_SIZE; i++) {
+    char c = txt->charAt(i);
+    NumArr[i] = static_cast<uint8_t>(c);
+  }
+  return NumArr;
 }
