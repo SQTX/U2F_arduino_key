@@ -4,7 +4,6 @@
 
 #include "dataConverter.h"
 
-
 String Converter::convBase32ToTxt(String* in) {
   String out {};
 
