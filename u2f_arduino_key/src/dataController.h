@@ -7,9 +7,16 @@
 
 #include <Arduino.h>
 #include <EEPROM.h>
+#include "Key.h"
+
+
+void writeIntToEEPROM(int, const int);
+int readIntFromEEPROM(int);
 
 void writeStringToEEPROM(int, const String&);
-String readStringFromEEPROM(int);
+String readStringFromEEPROM(int, int);
 
+void writeKeyToEEPROM(int, const Key&);
+Key readKeyFromEEPROM(int);
 
 #endif //U2F_ARDUINO_KEY_DATACONTROLLER_H
