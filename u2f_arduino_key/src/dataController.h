@@ -7,7 +7,7 @@
 
 #include <Arduino.h>
 #include <EEPROM.h>
-//#include "Key.h"
+
 
 class DataController {
 public:
@@ -20,9 +20,6 @@ private:
 
   static void writeStringToEEPROM(int*, const String&);
   static String readStringFromEEPROM(int*, int);
-
-//  void writeKeyToEEPROM(int, const Key&);
-//  Key readKeyFromEEPROM(int);
 };
 
 

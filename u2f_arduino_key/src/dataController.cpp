@@ -82,28 +82,3 @@ static String DataController::readStringFromEEPROM(int *addrOffset, int size) {
   (*addrOffset) += size;
   return String(data);
 }
-
-
-//void DataController::writeKeyToEEPROM(int addrOffset, const Key &key) {
-//  String nameTxt = key.getName();
-//  String keyTex = key.getKey();
-//
-//  uint8_t nameSize = nameTxt.length();
-//  uint8_t keySize = keyTex.length();
-//
-//  writeIntToEEPROM(addrOffset, nameSize);
-//  writeIntToEEPROM(addrOffset+1, keySize);
-//  writeStringToEEPROM(addrOffset+2, nameTxt);
-//  writeStringToEEPROM(addrOffset+2+nameSize, nameTxt);
-//}
-//
-//Key DataController::readKeyFromEEPROM(int addrOffset) {
-//  uint8_t nameSize = readIntFromEEPROM(addrOffset);
-//  uint8_t keySize = readIntFromEEPROM(addrOffset+1);
-//
-//  String nameTxt = readStringFromEEPROM(addrOffset+2, nameSize);
-//  String keyTex = readStringFromEEPROM(addrOffset+2+nameSize, keySize);
-//
-//  Key key(nameTxt, keyTex);
-//  return key;
-//}
