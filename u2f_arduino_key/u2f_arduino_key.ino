@@ -15,21 +15,18 @@
 
 // ******************************************************************
 // Configuration:
-// constexpr uint8_t KEY_SIZE {30};       //TODO:  Moved to dataConverter.h
-
+//TODO: Add description
+constexpr int8_t CONTROL_BTN_PIN {7};
+//TODO: Add description
+constexpr int MAX_EEPROM_CAPACITY {30};
 /* The hour difference between the time zone set to RTC and the UTC time zone [in hours]:
  * CET(summer_time) - UTC = 2 [h]
  * */
-constexpr int8_t
-TIME_ZONE_OFFSET {
-2};
+constexpr int8_t TIME_ZONE_OFFSET {2};
 /* Time difference between the RTC module time and the real time [in seconds]:
  * 1698601110 - 1698601115 = -5 [s]
  * */
-constexpr int8_t
-RTC_OFFSET {
--5};
-constexpr int MAX_EEPROM_CAPACITY{30};
+constexpr int8_t RTC_OFFSET {-5};
 
 
 // ******************************************************************
@@ -48,6 +45,13 @@ String *keysDatabase{};
  * the DS3231_set example.
  * */
 RTClib myRTC;
+
+enum class OPTIONS {POWEROFF = 0,
+                    GENERATE,
+                    ADDNEW};
+
+void generateToken();
+void addNewKey();
 
 
 void setup() {
@@ -77,7 +81,7 @@ void loop() {
 
   String txtKey{Converter::convBase32ToTxt(&usedPrivKey)};
   uint8_t * hmacKey{Converter::convStrToNumArr(&txtKey)};
-  TOTP totp = TOTP(hmacKey, 20);          // TODO: Hard-code max size of key
+  TOTP totp = TOTP(hmacKey, 20);         // TODO: Hard-code max size of key (use `.length()` on key from array)
 
   char code[7];
 
