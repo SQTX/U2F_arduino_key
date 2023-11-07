@@ -17,25 +17,29 @@
 // Configuration:
 // constexpr uint8_t KEY_SIZE {30};       //TODO:  Moved to dataConverter.h
 
-  /* The hour difference between the time zone set to RTC and the UTC time zone [in hours]:
-   * CET(summer_time) - UTC = 2 [h]
-   * */
-  constexpr int8_t TIME_ZONE_OFFSET {2};
-  /* Time difference between the RTC module time and the real time [in seconds]:
-   * 1698601110 - 1698601115 = -5 [s]
-   * */
-  constexpr int8_t RTC_OFFSET {-5};
-  constexpr int MAX_EEPROM_CAPACITY {30};
+/* The hour difference between the time zone set to RTC and the UTC time zone [in hours]:
+ * CET(summer_time) - UTC = 2 [h]
+ * */
+constexpr int8_t
+TIME_ZONE_OFFSET {
+2};
+/* Time difference between the RTC module time and the real time [in seconds]:
+ * 1698601110 - 1698601115 = -5 [s]
+ * */
+constexpr int8_t
+RTC_OFFSET {
+-5};
+constexpr int MAX_EEPROM_CAPACITY{30};
 
 
 // ******************************************************************
 // Example database with Base32 format keys:
-String keysDB[4] {"github", "JV4VG2LNOBWGKU3FMNZGK5CUPB2EWZLZ",   // "MySimpleSecretTxtKey"
-                  "text", "IFBEGRBRGIZQ===="};                    // "ABCD123"
+String keysDB[4]{"github", "JV4VG2LNOBWGKU3FMNZGK5CUPB2EWZLZ",   // "MySimpleSecretTxtKey"
+                 "text", "IFBEGRBRGIZQ===="};                    // "ABCD123"
 
 
-int numberOfKeys {};
-String *keysDatabase {};
+int numberOfKeys{};
+String *keysDatabase{};
 
 
 // ******************************************************************
@@ -50,8 +54,7 @@ void setup() {
   Serial.begin(9600);
   Wire.begin();
 
-  // EEPROM.write(0, 0);
-  // DataController::writeDataToEEPROM(keysDB, 2, MAX_EEPROM_CAPACITY);
+  // DataController::writeDataToEEPROM(keysDB, 2, MAX_EEPROM_CAPACITY);   // First import data
 
   keysDatabase = DataController::readDataFromEEPROM(&numberOfKeys);
   // for(int i = 0; i < 4; i++){
@@ -60,36 +63,36 @@ void setup() {
   //   Serial.print(":");
   //   Serial.println(keysDatabase[i]);
   // }
-  
 
-  if(numberOfKeys == 0){
+
+  if (numberOfKeys == 0) {
     Serial.println("Brak kluczy!");
   }
 }
 
 
-void loop() {  
+void loop() {
   // Choose a key:
-  String usedPrivKey {keysDatabase[1]};   // TODO: Hard-code key index
+  String usedPrivKey{keysDatabase[1]};   // TODO: Hard-code key index
 
-  String txtKey {Converter::convBase32ToTxt(&usedPrivKey)};
-  uint8_t* hmacKey {Converter::convStrToNumArr(&txtKey)};
-  TOTP totp = TOTP(hmacKey, 20);    // TODO: Hard-code size of key
+  String txtKey{Converter::convBase32ToTxt(&usedPrivKey)};
+  uint8_t * hmacKey{Converter::convStrToNumArr(&txtKey)};
+  TOTP totp = TOTP(hmacKey, 20);          // TODO: Hard-code max size of key
 
   char code[7];
 
 
   // Get currently time from RTC module:
-  DateTime now {myRTC.now()};           // Get current time
-  long UnixTimeStep {now.unixtime()};   // Replacement in Unix TimeStamp
+  DateTime now{myRTC.now()};           // Get current time
+  long UnixTimeStep{now.unixtime()};   // Replacement in Unix TimeStamp
   //   UTC = (local_time - TIME_ZONE_OFFSET - RTC_OFFSET)
-  long UTC {UnixTimeStep - (TIME_ZONE_OFFSET*60*60) - RTC_OFFSET};
+  long UTC{UnixTimeStep - (TIME_ZONE_OFFSET * 60 * 60) - RTC_OFFSET};
 
 //  Serial.print("TIME: ");
 //  Serial.println(UTC);
 
 
-  char* newCode {totp.getCode(UTC)};  // Generate new token
+  char *newCode{totp.getCode(UTC)};  // Generate new token
 
   // Print token
   if (strcmp(code, newCode) != 0) {
@@ -101,6 +104,9 @@ void loop() {
 
 
   // Dynamic refresh (Always every 00' and 30' seconds)
-  uint16_t restTime {(30 - (UTC % 30)) * 1000};
+  uint16_t restTime{(30 - (UTC % 30)) * 1000};
   delay(restTime);
 }
+
+// delete[] keysDatabase;                                                               // TODO: To ADD
+// DataController::writeDataToEEPROM(keysDatabase, numberOfKeys, MAX_EEPROM_CAPACITY);  // TODO: To ADD (after pressing button or after add new key)

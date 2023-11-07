@@ -5,15 +5,14 @@
 #include "dataController.h"
 
 static void DataController::writeDataToEEPROM(String *keys, const int numberOfKeys, const int MAX_SIZE) {
-  int addresIndex {0};
+  int addresIndex{0};
   writeIntToEEPROM(&addresIndex, numberOfKeys);
   writeIntToEEPROM(&addresIndex, MAX_SIZE);
 
-  if(numberOfKeys == 0) {
-    ;
+  if (numberOfKeys == 0) { ;
   } else {
     Serial.println("Saving in processing");
-    for(int i = 0; i < (numberOfKeys*2); i++) {
+    for (int i = 0; i < (numberOfKeys * 2); i++) {
       uint8_t txtSize = keys[i].length() + 1;
       writeIntToEEPROM(&addresIndex, txtSize);
       writeStringToEEPROM(&addresIndex, keys[i]);
@@ -22,17 +21,17 @@ static void DataController::writeDataToEEPROM(String *keys, const int numberOfKe
   }
 }
 
-static String* DataController::readDataFromEEPROM(int *numberOfKeys) {
-  int addresIndex {0};
+static String *DataController::readDataFromEEPROM(int *numberOfKeys) {
+  int addresIndex{0};
 
   uint8_t keysNumber = readIntFromEEPROM(&addresIndex);
   (*numberOfKeys) = keysNumber;
 //  uint8_t maxEEPROMSize = readIntFromEEPROM(addresIndex++);
   addresIndex++;
 
-  static String *keys = new String[keysNumber*2];
+  static String *keys = new String[keysNumber * 2];
 
-  for(int i = 0; i < keysNumber*2; i++) {
+  for (int i = 0; i < keysNumber * 2; i++) {
     uint8_t txtSize = readIntFromEEPROM(&addresIndex);
     keys[i] = readStringFromEEPROM(&addresIndex, txtSize);
 
