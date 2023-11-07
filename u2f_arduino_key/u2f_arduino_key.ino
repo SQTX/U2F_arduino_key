@@ -5,10 +5,13 @@
 // Arduino lib:
 #include <Wire.h>
 #include <DS3231.h>
+#include <EEPROM.h>
 #include "sha1.h"
 #include "TOTP.h"
 // My file:
 #include "src/dataConverter.h"
+#include "src/dataController.h"
+// #include "src/Key.h"
 
 
 // ******************************************************************
@@ -22,14 +25,18 @@
   /* Time difference between the RTC module time and the real time [in seconds]:
    * 1698601110 - 1698601115 = -5 [s]
    * */
-  constexpr int8_t RTC_OFFSET {-5};       //
-                                          //
+  constexpr int8_t RTC_OFFSET {-5};
+  constexpr int MAX_EEPROM_CAPACITY {30};
 
 
 // ******************************************************************
 // Example database with Base32 format keys:
-String keysDB[2] {"JV4VG2LNOBWGKU3FMNZGK5CUPB2EWZLZ",   // "MySimpleSecretTxtKey"
-                  "IFBEGRBRGIZQ===="};                  // "ABCD123"
+String keysDB[4] {"github", "JV4VG2LNOBWGKU3FMNZGK5CUPB2EWZLZ",   // "MySimpleSecretTxtKey"
+                  "text", "IFBEGRBRGIZQ===="};                    // "ABCD123"
+
+
+int numberOfKeys {};
+String *keysDatabase {};
 
 
 // ******************************************************************
@@ -43,12 +50,28 @@ RTClib myRTC;
 void setup() {
   Serial.begin(9600);
   Wire.begin();
+
+  // EEPROM.write(0, 0);
+  // DataController::writeDataToEEPROM(keysDB, 2, MAX_EEPROM_CAPACITY);
+
+  keysDatabase = DataController::readDataFromEEPROM(&numberOfKeys);
+  // for(int i = 0; i < 4; i++){
+  //   Serial.print("Slowo ");
+  //   Serial.print(i);
+  //   Serial.print(":");
+  //   Serial.println(keysDatabase[i]);
+  // }
+  
+
+  if(numberOfKeys == 0){
+    Serial.println("Brak kluczy!");
+  }
 }
 
 
 void loop() {  
   // Choose a key:
-  String usedPrivKey {keysDB[0]};   // TODO: Hard-code key index
+  String usedPrivKey {keysDatabase[1]};   // TODO: Hard-code key index
 
   String txtKey {Converter::convBase32ToTxt(&usedPrivKey)};
   uint8_t* hmacKey {Converter::convStrToNumArr(&txtKey)};
