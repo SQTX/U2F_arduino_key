@@ -4,61 +4,106 @@
 
 #include "dataController.h"
 
+static void DataController::writeDataToEEPROM(String *keys, const int numberOfKeys, const int MAX_SIZE) {
+  int addresIndex {0};
+  writeIntToEEPROM(&addresIndex, numberOfKeys);
+  writeIntToEEPROM(&addresIndex, MAX_SIZE);
 
+  if(numberOfKeys == 0) {
+    ;
+  } else {
+    Serial.println("Saving in processing");
+    for(int i = 0; i < (numberOfKeys*2); i++) {
+      uint8_t txtSize = keys[i].length() + 1;
+      writeIntToEEPROM(&addresIndex, txtSize);
+      writeStringToEEPROM(&addresIndex, keys[i]);
+    }
+    Serial.println("Save Complited!");
+  }
+}
 
+static String* DataController::readDataFromEEPROM(int *numberOfKeys) {
+  int addresIndex {0};
+
+  uint8_t keysNumber = readIntFromEEPROM(&addresIndex);
+  (*numberOfKeys) = keysNumber;
+//  uint8_t maxEEPROMSize = readIntFromEEPROM(addresIndex++);
+  addresIndex++;
+
+  static String *keys = new String[keysNumber*2];
+
+  for(int i = 0; i < keysNumber*2; i++) {
+    uint8_t txtSize = readIntFromEEPROM(&addresIndex);
+    keys[i] = readStringFromEEPROM(&addresIndex, txtSize);
+
+    Serial.println(keys[0]);
+    Serial.println(keys[1]);
+  }
+
+  return keys;
+}
 
 
 //Priv --------------------------------------------------------------------------------
-void writeIntToEEPROM(int addrOffset, const int number) {
-  EEPROM.write(addrOffset, number);
+static void DataController::writeIntToEEPROM(int *addrOffset, const int number) {
+  EEPROM.write(*addrOffset, number);
+  (*addrOffset)++;
 }
 
-int readIntFromEEPROM(int addrOffset) {
-  int number = EEPROM.read(addrOffset);
+static int DataController::readIntFromEEPROM(int *addrOffset) {
+  int number = EEPROM.read(*addrOffset);
+  (*addrOffset)++;
   return number;
 }
 
 
-void writeStringToEEPROM(int addrOffset, const String &txt) {
-  byte size = txt.length();
+static void DataController::writeStringToEEPROM(int *addrOffset, const String &txt) {
+  uint8_t size = txt.length();
 
   for (int i = 0; i < size; i++) {
-    EEPROM.write(addrOffset + 1 + i, txt[i]);
+    EEPROM.write((*addrOffset) + i, txt[i]);
   }
+  (*addrOffset) += size;
+
+  EEPROM.write((*addrOffset), '\0');
+  (*addrOffset)++;
 }
 
-String readStringFromEEPROM(int addrOffset, int size) {
-  char data[size + 1];
+static String DataController::readStringFromEEPROM(int *addrOffset, int size) {
+//  char data[size + 1];
+  char data[size];
 
   for (int i = 0; i < size; i++) {
-    data[i] = EEPROM.read(addrOffset + 1 + i);
+    data[i] = EEPROM.read((*addrOffset) + i);
   }
-  data[size] = '\0';
 
+//  data[size] = '\0';
+
+  (*addrOffset) += size;
   return String(data);
 }
 
 
-void writeKeyToEEPROM(int addrOffset, const Key &key) {
-  String nameTxt = key.getName();
-  String keyTex = key.getKey();
-
-  uint8_t nameSize = nameTxt.length();
-  uint8_t keySize = keyTex.length();
-
-  writeIntToEEPROM(addrOffset, nameSize);
-  writeIntToEEPROM(addrOffset+1, keySize);
-  writeStringToEEPROM(addrOffset+2, nameTxt);
-  writeStringToEEPROM(addrOffset+2+nameSize, nameTxt);
-}
-
-Key readKeyFromEEPROM(int addrOffset) {
-  uint8_t nameSize = readIntFromEEPROM(addrOffset);
-  uint8_t keySize = readIntFromEEPROM(addrOffset+1);
-
-  String nameTxt = readStringFromEEPROM(addrOffset+2, nameSize);
-  String keyTex = readStringFromEEPROM(addrOffset+2+nameSize, keySize);
-
-  Key key(nameTxt, keyTex);
-  return key;
-}
+//void DataController::writeKeyToEEPROM(int addrOffset, const Key &key) {
+//  String nameTxt = key.getName();
+//  String keyTex = key.getKey();
+//
+//  uint8_t nameSize = nameTxt.length();
+//  uint8_t keySize = keyTex.length();
+//
+//  writeIntToEEPROM(addrOffset, nameSize);
+//  writeIntToEEPROM(addrOffset+1, keySize);
+//  writeStringToEEPROM(addrOffset+2, nameTxt);
+//  writeStringToEEPROM(addrOffset+2+nameSize, nameTxt);
+//}
+//
+//Key DataController::readKeyFromEEPROM(int addrOffset) {
+//  uint8_t nameSize = readIntFromEEPROM(addrOffset);
+//  uint8_t keySize = readIntFromEEPROM(addrOffset+1);
+//
+//  String nameTxt = readStringFromEEPROM(addrOffset+2, nameSize);
+//  String keyTex = readStringFromEEPROM(addrOffset+2+nameSize, keySize);
+//
+//  Key key(nameTxt, keyTex);
+//  return key;
+//}

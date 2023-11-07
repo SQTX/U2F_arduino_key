@@ -7,16 +7,23 @@
 
 #include <Arduino.h>
 #include <EEPROM.h>
-#include "Key.h"
+//#include "Key.h"
 
+class DataController {
+public:
+  static void writeDataToEEPROM(String*, int, int);
+  static String* readDataFromEEPROM(int*);
 
-void writeIntToEEPROM(int, const int);
-int readIntFromEEPROM(int);
+private:
+  static void writeIntToEEPROM(int*, const int);
+  static int readIntFromEEPROM(int*);
 
-void writeStringToEEPROM(int, const String&);
-String readStringFromEEPROM(int, int);
+  static void writeStringToEEPROM(int*, const String&);
+  static String readStringFromEEPROM(int*, int);
 
-void writeKeyToEEPROM(int, const Key&);
-Key readKeyFromEEPROM(int);
+//  void writeKeyToEEPROM(int, const Key&);
+//  Key readKeyFromEEPROM(int);
+};
+
 
 #endif //U2F_ARDUINO_KEY_DATACONTROLLER_H
