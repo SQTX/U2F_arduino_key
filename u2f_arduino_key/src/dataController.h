@@ -11,18 +11,15 @@
 
 class DataController {
 public:
-  static void writeDataToEEPROM(String *, int, int);
-
-  static String *readDataFromEEPROM(int *);
+  static void writeDataToEEPROM(String*, int, int);
+  static String* readDataFromEEPROM(int*);
 
 private:
-  static void writeIntToEEPROM(int *, const int);
+  static void writeIntToEEPROM(int*, const int);
+  static int readIntFromEEPROM(int*);
 
-  static int readIntFromEEPROM(int *);
-
-  static void writeStringToEEPROM(int *, const String &);
-
-  static String readStringFromEEPROM(int *, int);
+  static void writeStringToEEPROM(int*, const String&);
+  static String readStringFromEEPROM(int*, int);
 };
 
 
