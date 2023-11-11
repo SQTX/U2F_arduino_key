@@ -4,7 +4,7 @@
 
 #include "dataController.h"
 
-static void DataController::writeDataToEEPROM(String *keys, const int numberOfKeys, const int MAX_SIZE = MAX_EEPROM_CAPACITY) {
+static void DataController::writeDataToEEPROM(String *keys, const int numberOfKeys, const int MAX_SIZE) {
   int addresIndex {0};
 
   addPrefixToEEPROM(&addresIndex);

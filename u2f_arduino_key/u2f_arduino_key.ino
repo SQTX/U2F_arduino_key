@@ -14,27 +14,25 @@
 
 
 // ******************************************************************
-// Configuration:
+//! Configuration:
 /*! The hour difference between the time zone set to RTC and the UTC time zone [in hours]:
  * CET(summer_time) - UTC = 2 [h]
  * */
 constexpr int8_t TIME_ZONE_OFFSET {2};
+
 /*! Time difference between the RTC module time and the real time [in seconds]:
  * 1698601110 - 1698601115 = -5 [s]
  * */
 constexpr int8_t RTC_OFFSET {-5};
-
-
 // ******************************************************************
 // Example database with Base32 format keys:
 String keysDB[4] {"github", "JV4VG2LNOBWGKU3FMNZGK5CUPB2EWZLZ",   // "MySimpleSecretTxtKey"
                   "text", "IFBEGRBRGIZQ===="};                    // "ABCD123"
 
-
+// ******************************************************************
+//! RAM memmory:
 int numberOfKeys {0};
 String *keysDatabase {};
-
-
 // ******************************************************************
 /*! Using the DS3231 RTC module requires its prior configuration and setting of the current time
  * from which the RTC will constantly count up. For this, you can use the DS3231.h library and
