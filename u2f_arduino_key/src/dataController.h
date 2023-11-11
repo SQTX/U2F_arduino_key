@@ -15,11 +15,19 @@ public:
   static String* readDataFromEEPROM(int*);
 
 private:
+  static constexpr int MAX_EEPROM_CAPACITY {30};
+  static inline String EEPROM_PREFIX {"sqx"};
+
+  static void addPrefixToEEPROM(int *addrOffset);
+  static bool prefixExist(int *addrOffset);
+
   static void writeIntToEEPROM(int*, const int);
   static int readIntFromEEPROM(int*);
 
-  static void writeStringToEEPROM(int*, const String&);
-  static String readStringFromEEPROM(int*, int);
+  static void writeStringToEEPROM(int*, const String&, bool nullChar = true);
+  static String readStringFromEEPROM(int*, int, bool nullChar = false);
+
+  static void serialFlush();
 };
 
 
