@@ -14,22 +14,22 @@ static void DataController::writeDataToEEPROM(String *keys, const int numberOfKe
   if(numberOfKeys == 0) {
     ;
   } else {
-    Serial.println("DEBUG: Saving is in processing");
+//    Serial.println("DEBUG: Saving is in processing");
     for(int i = 0; i < (numberOfKeys*2); i++) {
       uint8_t txtSize = keys[i].length() + 1;
       writeIntToEEPROM(&addresIndex, txtSize);
       writeStringToEEPROM(&addresIndex, keys[i]);
     }
   }
-  Serial.println("DEBUG: Saving complited!");
+//  Serial.println("DEBUG: Saving complited!");
 }
 
 static String* DataController::readDataFromEEPROM(int *numberOfKeys) {
   int addresIndex {0};
-  Serial.println("DEBUG: Reading is in processing");
+//  Serial.println("DEBUG: Reading is in processing");
 
   if(prefixExist(&addresIndex)) {
-    Serial.println("DEBUG: Prefix is correct");
+//    Serial.println("DEBUG: Prefix is correct");
 
     uint8_t keysNumber = readIntFromEEPROM(&addresIndex);
     (*numberOfKeys) = keysNumber;
@@ -43,7 +43,7 @@ static String* DataController::readDataFromEEPROM(int *numberOfKeys) {
       keys[i] = readStringFromEEPROM(&addresIndex, txtSize);
     }
 
-    Serial.println("DEBUG: Reading complited!");
+//    Serial.println("DEBUG: Reading complited!");
     return keys;
   }else {
     Serial.println("FATAL ERROR: EEPROM memory is not preper to colaborate with \"U2F_arduino_key\" soft!");
@@ -78,7 +78,7 @@ static String* DataController::readDataFromEEPROM(int *numberOfKeys) {
     }while(!decisionMade);
 
     static String *keys = new String[0];
-    Serial.println("DEBUG: Reading complited!");
+//    Serial.println("DEBUG: Reading complited!");
     return keys;    // Return empty array
   }
 }
@@ -90,7 +90,7 @@ static void DataController::addPrefixToEEPROM(int *addrOffset){
 }
 
 static bool DataController::prefixExist(int *addrOffset){
-  Serial.println("DEBUG: Prefix is checking");
+//  Serial.println("DEBUG: Prefix is checking");
   const uint8_t prefixSize = EEPROM_PREFIX.length();
   String currentPrefix = readStringFromEEPROM(addrOffset, prefixSize);
 
