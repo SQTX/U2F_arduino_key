@@ -15,32 +15,14 @@
 
 // ******************************************************************
 // Configuration:
-<<<<<<< HEAD
-//TODO: Add description
-//constexpr int8_t CONTROL_BTN_PIN {7};
-//TODO: Add description
-constexpr int MAX_EEPROM_CAPACITY {30};
-/* The hour difference between the time zone set to RTC and the UTC time zone [in hours]:
+/*! The hour difference between the time zone set to RTC and the UTC time zone [in hours]:
  * CET(summer_time) - UTC = 2 [h]
  * */
 constexpr int8_t TIME_ZONE_OFFSET {2};
-/* Time difference between the RTC module time and the real time [in seconds]:
+/*! Time difference between the RTC module time and the real time [in seconds]:
  * 1698601110 - 1698601115 = -5 [s]
  * */
 constexpr int8_t RTC_OFFSET {-5};
-=======
-// constexpr uint8_t KEY_SIZE {30};       //TODO:  Moved to dataConverter.h
-
-  /* The hour difference between the time zone set to RTC and the UTC time zone [in hours]:
-   * CET(summer_time) - UTC = 2 [h]
-   * */
-  constexpr int8_t TIME_ZONE_OFFSET {2};
-  /* Time difference between the RTC module time and the real time [in seconds]:
-   * 1698601110 - 1698601115 = -5 [s]
-   * */
-  constexpr int8_t RTC_OFFSET {-5};
-  constexpr int MAX_EEPROM_CAPACITY {30};
->>>>>>> parent of 42dccc5 (Autoformat and add TODO notes about delete array and write data to EEPROM)
 
 
 // ******************************************************************
@@ -49,43 +31,38 @@ String keysDB[4] {"github", "JV4VG2LNOBWGKU3FMNZGK5CUPB2EWZLZ",   // "MySimpleSe
                   "text", "IFBEGRBRGIZQ===="};                    // "ABCD123"
 
 
-int numberOfKeys {};
+int numberOfKeys {0};
 String *keysDatabase {};
 
 
 // ******************************************************************
-/* Using the DS3231 RTC module requires its prior configuration and setting of the current time
+/*! Using the DS3231 RTC module requires its prior configuration and setting of the current time
  * from which the RTC will constantly count up. For this, you can use the DS3231.h library and
  * the DS3231_set example.
  * */
 RTClib myRTC;
 
-enum class OPTIONS {POWEROFF = 0,
-                    GENERATE,
-                    ADDNEW};
 
-void generateToken();
-void addNewKey();
-
+void serialFlush();
 
 void setup() {
   Serial.begin(9600);
+  serialFlush();        // Clean flush memory
   Wire.begin();
 
-  // EEPROM.write(0, 0);
-  // DataController::writeDataToEEPROM(keysDB, 2, MAX_EEPROM_CAPACITY);
+//  NOTE: EEPROM reset:
+//  EEPROM.write(0, 'f');
+//  EEPROM.write(1, 'o');
+//  EEPROM.write(2, '0');
 
+  // DataController::writeDataToEEPROM(keysDB, 2, MAX_EEPROM_CAPACITY);
   keysDatabase = DataController::readDataFromEEPROM(&numberOfKeys);
-  // for(int i = 0; i < 4; i++){
-  //   Serial.print("Slowo ");
-  //   Serial.print(i);
-  //   Serial.print(":");
-  //   Serial.println(keysDatabase[i]);
-  // }
-  
+
 
   if(numberOfKeys == 0){
-    Serial.println("Brak kluczy!");
+    Serial.println("No key in memory!");
+    Serial.println("The app gets frozen");
+    while(true){};
   }
 }
 
@@ -93,16 +70,10 @@ void setup() {
 void loop() {  
   // Choose a key:
   String usedPrivKey {keysDatabase[1]};   // TODO: Hard-code key index
-
-<<<<<<< HEAD
+  
   String txtKey{Converter::convBase32ToTxt(&usedPrivKey)};
   uint8_t * hmacKey{Converter::convStrToNumArr(&txtKey)};
   TOTP totp = TOTP(hmacKey, 20);         // TODO: Hard-code max size of key (use `.length()` on key from array)
-=======
-  String txtKey {Converter::convBase32ToTxt(&usedPrivKey)};
-  uint8_t* hmacKey {Converter::convStrToNumArr(&txtKey)};
-  TOTP totp = TOTP(hmacKey, 20);    // TODO: Hard-code size of key
->>>>>>> parent of 42dccc5 (Autoformat and add TODO notes about delete array and write data to EEPROM)
 
   char code[7];
 
@@ -128,7 +99,13 @@ void loop() {
   Serial.println("==============");
 
 
-  // Dynamic refresh (Always every 00' and 30' seconds)
+  //! Dynamic refresh (Always every 00' and 30' seconds)
   uint16_t restTime {(30 - (UTC % 30)) * 1000};
   delay(restTime);
+}
+
+void serialFlush(){
+  while(Serial.available() > 0) {
+    char t = Serial.read();
+  }
 }
