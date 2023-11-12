@@ -34,7 +34,7 @@ static String* DataController::readDataFromEEPROM(int *numberOfKeys) {
     uint8_t keysNumber = readIntFromEEPROM(&addresIndex);
     (*numberOfKeys) = keysNumber;
     uint8_t maxEEPROMSize = readIntFromEEPROM(addresIndex++);
-    addresIndex++;
+//    addresIndex++;
 
     static String *keys = new String[keysNumber*2];
 
