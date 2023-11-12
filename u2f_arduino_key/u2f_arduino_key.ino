@@ -17,6 +17,9 @@
 //! Configuration:
 //TODO: Add description
 constexpr int8_t CONTROL_BTN_PIN {7};
+constexpr uint16_t WAIT_FOR_ANOTHER_CLICK {500};       // Time how long sys will be waiting to detected second click
+constexpr uint16_t HOW_LONG_PRESS_BTN {1100};       // Time how long sys will be waiting to detected second click
+constexpr uint8_t BTN_LOOP_COOLDOWN {15};   // Second-click-loop delay
 
 /*! The hour difference between the time zone set to RTC and the UTC time zone [in hours]:
  * CET(summer_time) - UTC = 2 [h]
@@ -46,6 +49,7 @@ RTClib myRTC;
 void serialFlush();
 
 enum {
+  NONE = -1,
   POWEROFF = 0,
   GENERATE_TOKEN,
   CHOOSE_KEY,
@@ -70,9 +74,9 @@ void setup() {
 //  NOTE: EEPROM reset:
 //  EEPROM.write(0, 'f');
 //  EEPROM.write(1, 'o');
-//  EEPROM.write(2, '0');
+//  EEPROM.write(2, 'o');
 
-  // DataController::writeDataToEEPROM(keysDB, 2, MAX_EEPROM_CAPACITY);
+//  DataController::writeDataToEEPROM(keysDB, 2);
   keysDatabase = DataController::readDataFromEEPROM(&numberOfKeys);
 
 
@@ -86,10 +90,9 @@ void setup() {
 
 
 void loop() {
-  // Choose a key:
   switch(btnDetector()){
     case GENERATE_TOKEN:
-      Serial.println("Generate");
+      generateToken();
       break;
     case CHOOSE_KEY:
       Serial.println("Choose");
@@ -104,40 +107,46 @@ void loop() {
       Serial.println("None option");
       break;
   }
+  delay(500);
 }
 
 
 int btnDetector() {
-  unsigned long startTime = 0;
-  bool btnTimerStarted = false;
+  bool btnTimerStarted{false};
+  unsigned long startTime{0};
 
-  while(digitalRead(BTN) == HIGH) {};   // Waiting for first click
+  Serial.println("Use button");
+
+  while(digitalRead(CONTROL_BTN_PIN) == HIGH) {};   // Waiting for first click
 
   // First click detected
-  if(digitalRead(BTN) == LOW) {
-    startTime = millis();
-    btnTimerStarted = true;
+  if(digitalRead(CONTROL_BTN_PIN) == LOW) {
+    startTime = {millis()};
+    btnTimerStarted = {true};
+    while(digitalRead(CONTROL_BTN_PIN) == LOW) {};
 
-    while(digitalRead(BTN) == LOW) {};
-
+    unsigned long pressTime = {millis() - startTime};
+    if(pressTime >= HOW_LONG_PRESS_BTN) {
+      return ADD_NEW;   // Click and press
+    }
 
     while(btnTimerStarted) {
-      unsigned long currTime = millis() - startTime;
-      if(currTime > BTN_COOLDOWN) break;
+      unsigned long currTime = {millis() - startTime};
+      if(currTime > WAIT_FOR_ANOTHER_CLICK) break;
 
-      // Second click detedted
-      if(digitalRead(BTN) == LOW) {
-        while(digitalRead(BTN) == LOW) {};
-        return DOUBLE_CLICK;
+      // Second click detected
+      if(digitalRead(CONTROL_BTN_PIN) == LOW) {
+        while(digitalRead(CONTROL_BTN_PIN) == LOW) {};
+        return CHOOSE_KEY;  // Double click
       }
 
       delay(BTN_LOOP_COOLDOWN);
     }
 
-    return SINGLE_CLICK;
+    return GENERATE_TOKEN;  // Single click
   }
 
-  return NONE;
+  return NONE;  // None click
 }
 
 
@@ -174,8 +183,8 @@ void generateToken() {
 
 
   //! Dynamic refresh (Always every 00' and 30' seconds)
-  uint16_t restTime{(30 - (UTC % 30)) * 1000};
-  delay(restTime);
+//  uint16_t restTime{(30 - (UTC % 30)) * 1000};
+//  delay(restTime);
 }
 
 
