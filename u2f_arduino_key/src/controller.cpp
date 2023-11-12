@@ -42,3 +42,10 @@ static int Controller::btnDetector(const uint8_t CONTROL_BTN_PIN, const uint8_t 
 
   return NONE;  // None click
 }
+
+
+static void Controller::serialFlushCleaner() {
+  while (Serial.available() > 0) {
+    char t = Serial.read();
+  }
+}

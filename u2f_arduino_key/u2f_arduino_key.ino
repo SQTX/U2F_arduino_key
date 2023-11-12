@@ -47,11 +47,7 @@ String *keysDatabase{};
  * */
 RTClib myRTC;
 
-void serialFlush();
 
-
-
-//int btnDetector();
 
 void generateToken();
 
@@ -63,7 +59,7 @@ void addNewKey();
 void setup() {
   pinMode (CONTROL_BTN_PIN, INPUT_PULLUP);
   Serial.begin(9600);
-  serialFlush();        // Clean flush memory
+  Controller::serialFlushCleaner();        // Clean flush memory
   Wire.begin();
 
 //  NOTE: EEPROM reset:
@@ -144,11 +140,4 @@ void generateToken() {
   //! Dynamic refresh (Always every 00' and 30' seconds)
 //  uint16_t restTime{(30 - (UTC % 30)) * 1000};
 //  delay(restTime);
-}
-
-
-void serialFlush() {
-  while (Serial.available() > 0) {
-    char t = Serial.read();
-  }
 }

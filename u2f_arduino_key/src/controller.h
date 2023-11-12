@@ -19,6 +19,8 @@ public:
 
   static int btnDetector(const uint8_t CONTROL_BTN_PIN, const uint8_t BTN_LOOP_COOLDOWN,
                          const uint16_t WAIT_FOR_ANOTHER_CLICK, const uint16_t HOW_LONG_PRESS_BTN);
+
+  static void serialFlushCleaner();
 };
 
 
