@@ -39,6 +39,7 @@ String keysDB[4]{"github", "JV4VG2LNOBWGKU3FMNZGK5CUPB2EWZLZ",   // "MySimpleSec
 // ******************************************************************
 //! RAM memmory:
 int numberOfKeys{0};
+int activeKeyIndex{1};    // TODO: Change to 0
 String *keysDatabase{};
 // ******************************************************************
 /*! Using the DS3231 RTC module requires its prior configuration and setting of the current time
@@ -46,14 +47,6 @@ String *keysDatabase{};
  * the DS3231_set example.
  * */
 RTClib myRTC;
-
-
-
-void generateToken();
-
-void chooseKey();
-
-void addNewKey();
 
 
 void setup() {
@@ -78,12 +71,36 @@ void setup() {
   }
 }
 
-
+void generateToken();
 
 void loop() {
   switch(Controller::btnDetector(CONTROL_BTN_PIN, BTN_LOOP_COOLDOWN, WAIT_FOR_ANOTHER_CLICK, HOW_LONG_PRESS_BTN)){
     case Controller::GENERATE_TOKEN:
-      generateToken();
+
+      String usedPrivKey{keysDatabase[activeKeyIndex]};
+      String txtKey{Converter::convBase32ToTxt(&usedPrivKey)};
+      uint8_t * hmacKey{Converter::convStrToNumArr(&txtKey)};
+
+
+      TOTP totp = TOTP(hmacKey, 20);         // TODO: Hard-code max size of key (use `.length()` on key from array)
+
+
+      //! Get currently time from RTC module:
+      DateTime now{myRTC.now()};                                            // Get current time
+      long UnixTimeStep{now.unixtime()};                                    // Replacement in Unix TimeStamp
+      long UTC{UnixTimeStep - (TIME_ZONE_OFFSET * 60 * 60) - RTC_OFFSET};
+
+
+      char *newCode{totp.getCode(UTC)};  // Generate new token
+
+      //! Print token:
+      char code[7];
+      if (strcmp(code, newCode) != 0) {
+        strcpy(code, newCode);
+        Serial.print("Token: ");
+        Serial.println(code);
+      }
+
       break;
     case Controller::CHOOSE_KEY:
       Serial.println("Choose");
@@ -99,45 +116,4 @@ void loop() {
       break;
   }
   delay(500);
-}
-
-
-
-
-
-
-void generateToken() {
-  String usedPrivKey{keysDatabase[1]};   // TODO: Hard-code key index
-
-  String txtKey{Converter::convBase32ToTxt(&usedPrivKey)};
-  uint8_t * hmacKey{Converter::convStrToNumArr(&txtKey)};
-  TOTP totp = TOTP(hmacKey, 20);         // TODO: Hard-code max size of key (use `.length()` on key from array)
-
-  char code[7];
-
-
-  // Get currently time from RTC module:
-  DateTime now{myRTC.now()};           // Get current time
-  long UnixTimeStep{now.unixtime()};   // Replacement in Unix TimeStamp
-  //   UTC = (local_time - TIME_ZONE_OFFSET - RTC_OFFSET)
-  long UTC{UnixTimeStep - (TIME_ZONE_OFFSET * 60 * 60) - RTC_OFFSET};
-
-//  Serial.print("TIME: ");
-//  Serial.println(UTC);
-
-
-  char *newCode{totp.getCode(UTC)};  // Generate new token
-
-  // Print token
-  if (strcmp(code, newCode) != 0) {
-    strcpy(code, newCode);
-    Serial.print("Token: ");
-    Serial.println(code);
-  }
-  Serial.println("==============");
-
-
-  //! Dynamic refresh (Always every 00' and 30' seconds)
-//  uint16_t restTime{(30 - (UTC % 30)) * 1000};
-//  delay(restTime);
 }
