@@ -5,17 +5,17 @@
 #include "dataConverter.h"
 
 
-String Converter::convBase32ToTxt(String* in) {
-  String out {};
-
-  int r {base32decodeToString(*in, out)};
-  if (r < 0) {
-    Serial.println("String is not detected!");
-    return;
-  }
-  
-  return out;
-}
+//String Converter::convBase32ToTxt(String in) {
+//  String out {};
+//
+//  int r {base32decodeToString(in, out)};
+//  if (r < 0) {
+//    Serial.println("String is not detected!");
+//    return;
+//  }
+//
+//  return out;
+//}
 
 
 uint8_t* Converter::convStrToNumArr(String* txt) {
