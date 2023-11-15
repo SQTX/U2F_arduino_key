@@ -38,7 +38,7 @@ constexpr int8_t RTC_OFFSET {-5};
 //                 "text", "IFBEGRBRGIZQ===="};                    // "ABCD123"
 //                                                                  Base32:
 String keysDB[4]{"github", "MySimpleSecretTxtKey",               // "JV4VG2LNOBWGKU3FMNZGK5CUPB2EWZLZ"
-                 "text", "ABCD123===="};                         // "IFBEGRBRGIZQ===="
+                 "text", "ABCD123"};                             // "IFBEGRBRGIZQ===="
 
 // ******************************************************************
 //! RAM memmory:
@@ -64,7 +64,7 @@ void setup() {
 //  EEPROM.write(1, 'o');
 //  EEPROM.write(2, 'o');
 
-  // DataController::writeDataToEEPROM(keysDB, 2);
+// DataController::writeDataToEEPROM(keysDB, 2);
   keysDatabase = DataController::readDataFromEEPROM(&numberOfKeys);
 
 
@@ -81,8 +81,13 @@ void loop() {
   int option = Controller::btnDetector(CONTROL_BTN_PIN, BTN_LOOP_COOLDOWN, WAIT_FOR_ANOTHER_CLICK, HOW_LONG_PRESS_BTN);
 
   if(option == Controller::GENERATE_TOKEN) {
+    Serial.println("Klucze: ");
+    for(int i = 0; i < numberOfKeys*2; i++){
+      Serial.println(keysDatabase[i]);
+    }
+
     String usedPrivKey = {keysDatabase[activeKeyIndex]};
-    uint8_t * hmacKey = {Converter::convStrToNumArr(&txtusedPrivKeyKey)};
+    uint8_t * hmacKey = {Converter::convStrToNumArr(&usedPrivKey)};
 
 
     TOTP totp = TOTP(hmacKey, 20);         // TODO: Hard-code max size of key (use `.length()` on key from array)
@@ -137,26 +142,62 @@ void loop() {
     }
   }
   else if (option == Controller::ADD_NEW) {
-    Serial.print("Give new key (in Base32): ");
+    numberOfKeys += 1;      // Increase numbers of all keys in DB
 
-    String newKey{};
+//!    Create new DB with bigger capacity and copy all old data:
+    static String *newKeysDB = new String[numberOfKeys*2];
+    for(int i = 0; i < (numberOfKeys*2); i++) {
+      if(i == ((numberOfKeys*2)-2) || i == ((numberOfKeys*2)-1)){
+        newKeysDB[i] = {""};
+        continue;
+      }
+      newKeysDB[i] = keysDatabase[i];
+    }
+    delete[] keysDatabase;
+    keysDatabase = newKeysDB;
+    newKeysDB = {nullptr};
+
+//!    Get new name and new key:
+    String newKeyName, newKey, newKeyBs32 {};
+
+    Serial.print("Write name of new key: ");
     Controller::serialFlushCleaner();
     while (Serial.available() == 0) {}
     delay(2);
     if (Serial.available() > 0) {
-      newKey = Serial.readStringUntil('\n');
-      newKey.trim();
+      newKeyName = Serial.readStringUntil('\n');
+      newKeyName.trim();
     }
     Serial.println("");
+    Serial.print("Name: ");
+    Serial.println(newKeyName);
 
-    Serial.print("New key: ");
+
+    Serial.print("Write new key (in Base32): ");
+    Controller::serialFlushCleaner();
+    while (Serial.available() == 0) {}
+    delay(2);
+    if (Serial.available() > 0) {
+      newKeyBs32 = Serial.readStringUntil('\n');
+      newKeyBs32.trim();
+    }
+    Serial.println("");
+    base32decodeToString(newKeyBs32, newKey);
+
+    Serial.print("New key Bs32: ");
+    Serial.print(newKeyBs32);
+    Serial.print(" -> ");
     Serial.println(newKey);
 
-    String newForm {};
-    base32decodeToString(newKey, newForm);
+//    Save new data in DB:
+    keysDatabase[(numberOfKeys*2)-2] = {newKeyName};
+    keysDatabase[(numberOfKeys*2)-1] = {newKey};
 
-    Serial.print("New form: ");
-    Serial.println(newForm);
+    
+//!    Save new array in EEPROM:
+    Serial.println("Writing new key in memory...");
+//    DataController::writeDataToEEPROM(keysDatabase, numberOfKeys);
+    Serial.println("Done");
   }
   else if (option == Controller::POWEROFF) {
     Serial.println("Power off");
