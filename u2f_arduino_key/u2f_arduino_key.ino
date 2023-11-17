@@ -40,7 +40,7 @@ String keysDB[4]{"text", "JV4VG2LNOBWGKU3FMNZGK5CUPB2EWZLZ",      // "MySimpleSe
 // ******************************************************************
 //! RAM memmory:
 int numberOfKeys{0};
-int activeKeyIndex{1};    // TODO: Change to 0
+int activeKeyIndex{0};
 String *keysDatabase{};
 // ******************************************************************
 /*! Using the DS3231 RTC module requires its prior configuration and setting of the current time
@@ -69,6 +69,8 @@ void setup() {
     Serial.println("No key in memory!");
     Serial.println("The app gets frozen");
     while (true) {};
+  } else {
+    activeKeyIndex = {1};
   }
 }
 
@@ -122,7 +124,7 @@ void loop() {
     }
   }
   else if (option == Controller::CHOOSE_KEY) {
-    Serial.print("Give key name: ");
+    Serial.print("Enter a key name: ");
 
     String name{};
     Controller::serialFlushCleaner();
@@ -136,21 +138,35 @@ void loop() {
 
     Serial.print("Name: ");
     Serial.println(name);
-    Serial.println(name.length());
 
+
+    int wantedNameSize = name.length();
+    wantedNameSize += 1;
+    char *wantedName = new char[wantedNameSize];
+    name.toCharArray(wantedName, wantedNameSize);
+
+    bool keyIsFound {false};
     for(int nameIndex = 0; nameIndex < (numberOfKeys*2); nameIndex+=2) {
       String nameFromArr = keysDatabase[nameIndex];
+      int currNameSize = nameFromArr.length();
+      currNameSize += 1;
+      char *currentName = new char[currNameSize];
+      nameFromArr.toCharArray(currentName, currNameSize);
 
-      Serial.print(nameFromArr);
-      Serial.print(" == ");
-      Serial.println(name);
-      if(nameFromArr.equals(name)) {
-        Serial.println("Jest!");
+      if(strcmp(currentName, wantedName) == 0) {
+        keyIsFound = {true};
+        activeKeyIndex = {nameIndex+1};
 
-        activeKeyIndex = nameIndex+1;
-        Serial.println(activeKeyIndex);
+        Serial.println("Key found");
         break;
       }
+
+      delete[] currentName;
+    }
+    delete[] wantedName;
+
+    if(!keyIsFound) {
+      Serial.println("This key does not exist in memory!");
     }
   }
   else if (option == Controller::ADD_NEW) {
