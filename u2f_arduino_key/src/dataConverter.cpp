@@ -36,3 +36,14 @@ static byte* Converter::stringToByteArr(String txt) {
 
   return stringInByte;
 }
+
+static String Converter::byteArrToString(byte *byteArr, uint16_t size) {
+  String newtext {};
+
+  for(int i = 0; i < size; i++){
+    char c {static_cast<char>(byteArr[i])};
+    newtext += c;
+  }
+
+  return newtext;
+}
