@@ -28,3 +28,11 @@ uint8_t* Converter::convStrToNumArr(String* txt) {
 
   return NumArr;
 }
+
+
+static byte* Converter::stringToByteArr(String txt) {
+  static byte *stringInByte = new byte[txt.length()+1];
+  txt.getBytes(stringInByte, txt.length()+1);
+
+  return stringInByte;
+}

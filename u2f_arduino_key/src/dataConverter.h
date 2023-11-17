@@ -23,6 +23,9 @@ public:
    * */
   static uint8_t* convStrToNumArr(String*);
 
+//!  Function convert String to byte array
+  static byte* stringToByteArr(String);
+
 };
 
 #endif //U2F_ARDUINO_KEY_DATACONVERTER_H
