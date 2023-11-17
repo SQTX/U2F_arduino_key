@@ -34,11 +34,8 @@ constexpr int8_t TIME_ZONE_OFFSET {2};
 constexpr int8_t RTC_OFFSET {-5};
 // ******************************************************************
 // Example database with Base32 format keys:
-//String keysDB[4]{"github", "JV4VG2LNOBWGKU3FMNZGK5CUPB2EWZLZ",   // "MySimpleSecretTxtKey"
-//                 "text", "IFBEGRBRGIZQ===="};                    // "ABCD123"
-//                                                                  Base32:
-String keysDB[4]{"github", "MySimpleSecretTxtKey",               // "JV4VG2LNOBWGKU3FMNZGK5CUPB2EWZLZ"
-                 "text", "ABCD123"};                             // "IFBEGRBRGIZQ===="
+String keysDB[4]{"text", "JV4VG2LNOBWGKU3FMNZGK5CUPB2EWZLZ",      // "MySimpleSecretTxtKey"
+                 "github", "AWS4R4HCB5Z54SR2"};                   // NONE
 
 // ******************************************************************
 //! RAM memmory:
@@ -64,7 +61,7 @@ void setup() {
 //  EEPROM.write(1, 'o');
 //  EEPROM.write(2, 'o');
 
-// DataController::writeDataToEEPROM(keysDB, 2);
+//  DataController::writeDataToEEPROM(keysDB, 2);
   keysDatabase = DataController::readDataFromEEPROM(&numberOfKeys);
 
 
@@ -81,19 +78,34 @@ void loop() {
   int option = Controller::btnDetector(CONTROL_BTN_PIN, BTN_LOOP_COOLDOWN, WAIT_FOR_ANOTHER_CLICK, HOW_LONG_PRESS_BTN);
 
   if(option == Controller::GENERATE_TOKEN) {
-    Serial.println("Klucze: ");
-    for(int i = 0; i < numberOfKeys*2; i++){
-      Serial.println(keysDatabase[i]);
+    String privKey = {keysDatabase[activeKeyIndex]};
+
+//!    Convert StringToChar:
+    uint8_t privKeySize = privKey.length();
+    privKeySize += 1;
+    char *keyInChar = new char[privKeySize];
+    privKey.toCharArray(keyInChar, privKeySize);
+
+//!    Convert char array to byte array:
+    int maxout = base32decode(keyInChar, NULL, 0);
+    maxout += 1;
+    uint8_t codeInByte[maxout];
+    int r = base32decode(keyInChar, codeInByte, maxout);
+
+    delete[] keyInChar;
+
+//!    Cut off all numbers after 0:
+    uint8_t hmacKey[maxout] = {};
+    for(int i = 0; i < maxout; i++) {
+      if(codeInByte[i] == 0) break;
+      hmacKey[i] = codeInByte[i];
     }
 
-    String usedPrivKey = {keysDatabase[activeKeyIndex]};
-    uint8_t * hmacKey = {Converter::convStrToNumArr(&usedPrivKey)};
+//!    Create TOTP object:
+    TOTP totp = TOTP(hmacKey, maxout);
 
 
-    TOTP totp = TOTP(hmacKey, 20);         // TODO: Hard-code max size of key (use `.length()` on key from array)
-
-
-    //! Get currently time from RTC module:
+//!    Get currently time from RTC module:
     DateTime now{myRTC.now()};                                            // Get current time
     long UnixTimeStep{now.unixtime()};                                    // Replacement in Unix TimeStamp
     long UTC{UnixTimeStep - (TIME_ZONE_OFFSET * 60 * 60) - RTC_OFFSET};
