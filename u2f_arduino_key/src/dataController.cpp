@@ -139,20 +139,17 @@ static void DataController::writeStringToEEPROM(int *addrOffset, const String &t
 }
 
 static String DataController::readStringFromEEPROM(int *addrOffset, int size, bool nullChar) {
-//  char data[size + 1];
-  char *data = new char[size];
+  String data {};
 
   for (int i = 0; i < size; i++) {
-    data[i] = EEPROM.read((*addrOffset) + i);
+    data += static_cast<char>(EEPROM.read((*addrOffset) + i));
   }
   (*addrOffset) += size;
 
   if(nullChar) {
-    data[size] = '\0';
+    data += '\0';
     (*addrOffset)++;
   }
 
-  String txt = data;
-  delete[] data;
-  return txt;
+  return data;
 }
