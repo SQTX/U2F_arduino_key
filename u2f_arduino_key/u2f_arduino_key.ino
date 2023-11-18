@@ -81,17 +81,11 @@ void loop() {
   int option = Controller::btnDetector(CONTROL_BTN_PIN, BTN_LOOP_COOLDOWN, WAIT_FOR_ANOTHER_CLICK, HOW_LONG_PRESS_BTN);
 
   if(option == Controller::GENERATE_TOKEN) {
-//    for(int i = 0; i < numberOfKeys*2 ; i++) {
-//      Serial.println(keysDatabase[i]);
-//      Serial.print("Size: ");
-//      Serial.println(keysDatabase[i].length());
-//    }
-//    Serial.print("Active: ");
-//    Serial.println(activeKeyIndex);
-//
+    Serial.print("Active: ");
+    Serial.println(keysDatabase[activeKeyIndex-1]);
+
+
     String privKey = {keysDatabase[activeKeyIndex]};
-//    Serial.print("Key: ");
-//    Serial.println(privKey);
 
 //!    Convert StringToChar:
     uint8_t privKeySize = privKey.length();
@@ -113,12 +107,6 @@ void loop() {
       if(i >= cutAfter && codeInByte[i] == 0) break;
       hmacKey[i] = codeInByte[i];
     }
-//
-//    for(int i = 0; i < maxout; i++){
-//      Serial.print(hmacKey[i]);
-//      Serial.print(", ");
-//    }
-//    Serial.println("");
 
 //!    Create TOTP object:
     TOTP totp = TOTP(hmacKey, maxout);
@@ -201,12 +189,8 @@ void loop() {
     delete[] keysDatabase;
     keysDatabase = newKeysDB;
     newKeysDB = {nullptr};
-
-//    Serial.println("Dane: ");
-//    for(int i = 0; i < (numberOfKeys*2)-2; i++){
-//      Serial.println(keysDatabase[i]);
-//    }
     delay(10);
+
 //!    Get new name and new key:
     String newKeyName, newKeyBs32 {};
 
@@ -218,7 +202,7 @@ void loop() {
       newKeyName = Serial.readStringUntil('\n');
       newKeyName.trim();
     }
-//    Serial.println("");
+    Serial.println("");
 //    Serial.print("Name: ");
 //    Serial.println(newKeyName);
 
@@ -230,17 +214,11 @@ void loop() {
       newKeyBs32 = Serial.readStringUntil('\n');
       newKeyBs32.trim();
     }
-//    Serial.println("");
-//    Serial.print("Key: ");
-//    Serial.println(newKeyBs32);
+    Serial.println("");
 
-//    Save new data in DB:
+//!    Save new data in DB:
     keysDatabase[(numberOfKeys*2)-2] = {newKeyName};
     keysDatabase[(numberOfKeys*2)-1] = {newKeyBs32};
-
-    for(int i = 0; i < (numberOfKeys*2); i++){
-      Serial.println(keysDatabase[i]);
-    }
 
 //!    Save new array in EEPROM:
 //    Serial.println("Writing new key in memory...");
