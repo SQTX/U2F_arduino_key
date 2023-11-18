@@ -33,17 +33,15 @@ constexpr int8_t TIME_ZONE_OFFSET {2};
  * */
 constexpr int8_t RTC_OFFSET {-5};
 // ******************************************************************
-// Example database with Base32 format keys:
-//String keysDB[4]{"github", "JV4VG2LNOBWGKU3FMNZGK5CUPB2EWZLZ",   // "MySimpleSecretTxtKey"
-//                 "text", "IFBEGRBRGIZQ===="};                    // "ABCD123"
-//                                                                  Base32:
-String keysDB[4]{"github", "MySimpleSecretTxtKey",               // "JV4VG2LNOBWGKU3FMNZGK5CUPB2EWZLZ"
-                 "text", "ABCD123"};                             // "IFBEGRBRGIZQ===="
+// NOTE: Example database with Base32 format keys:
+//String keysDB[4]{"google", "N7QBAAAJUCPUP37V",
+//                 "github", "AWS4R4HCB5Z54SR2"};
+//               "fb",     "JBSWY3DPEHPK3PXP"         // Example
 
 // ******************************************************************
 //! RAM memmory:
 int numberOfKeys{0};
-int activeKeyIndex{1};    // TODO: Change to 0
+int activeKeyIndex{0};
 String *keysDatabase{};
 // ******************************************************************
 /*! Using the DS3231 RTC module requires its prior configuration and setting of the current time
@@ -64,7 +62,7 @@ void setup() {
 //  EEPROM.write(1, 'o');
 //  EEPROM.write(2, 'o');
 
-// DataController::writeDataToEEPROM(keysDB, 2);
+//  DataController::writeDataToEEPROM(keysDB, 2);
   keysDatabase = DataController::readDataFromEEPROM(&numberOfKeys);
 
 
@@ -72,6 +70,8 @@ void setup() {
     Serial.println("No key in memory!");
     Serial.println("The app gets frozen");
     while (true) {};
+  } else {
+    activeKeyIndex = {1};
   }
 }
 
@@ -81,19 +81,38 @@ void loop() {
   int option = Controller::btnDetector(CONTROL_BTN_PIN, BTN_LOOP_COOLDOWN, WAIT_FOR_ANOTHER_CLICK, HOW_LONG_PRESS_BTN);
 
   if(option == Controller::GENERATE_TOKEN) {
-    Serial.println("Klucze: ");
-    for(int i = 0; i < numberOfKeys*2; i++){
-      Serial.println(keysDatabase[i]);
+    Serial.print("Active: ");
+    Serial.println(keysDatabase[activeKeyIndex-1]);
+
+
+    String privKey = {keysDatabase[activeKeyIndex]};
+
+//!    Convert StringToChar:
+    uint8_t privKeySize = privKey.length();
+    char *keyInChar = new char[privKeySize+1];
+    privKey.toCharArray(keyInChar, privKeySize+1);
+
+//!    Convert char array to byte array:
+    int maxout = base32decode(keyInChar, NULL, 0);
+    maxout += 1;
+    uint8_t codeInByte[maxout];
+    int r = base32decode(keyInChar, codeInByte, maxout);
+
+    delete[] keyInChar;
+
+//!    Cut off all useless numbers after 0:
+    uint8_t hmacKey[maxout] = {};
+    int cutAfter = {(privKeySize*5)/8};   // Protection against zeros inside the key
+    for(int i = 0; i < maxout; i++) {
+      if(i >= cutAfter && codeInByte[i] == 0) break;
+      hmacKey[i] = codeInByte[i];
     }
 
-    String usedPrivKey = {keysDatabase[activeKeyIndex]};
-    uint8_t * hmacKey = {Converter::convStrToNumArr(&usedPrivKey)};
+//!    Create TOTP object:
+    TOTP totp = TOTP(hmacKey, maxout);
 
 
-    TOTP totp = TOTP(hmacKey, 20);         // TODO: Hard-code max size of key (use `.length()` on key from array)
-
-
-    //! Get currently time from RTC module:
+//!    Get currently time from RTC module:
     DateTime now{myRTC.now()};                                            // Get current time
     long UnixTimeStep{now.unixtime()};                                    // Replacement in Unix TimeStamp
     long UTC{UnixTimeStep - (TIME_ZONE_OFFSET * 60 * 60) - RTC_OFFSET};
@@ -110,7 +129,7 @@ void loop() {
     }
   }
   else if (option == Controller::CHOOSE_KEY) {
-    Serial.print("Give key name: ");
+    Serial.print("Enter a key name: ");
 
     String name{};
     Controller::serialFlushCleaner();
@@ -124,21 +143,35 @@ void loop() {
 
     Serial.print("Name: ");
     Serial.println(name);
-    Serial.println(name.length());
 
+
+    int wantedNameSize = name.length();
+    wantedNameSize += 1;
+    char *wantedName = new char[wantedNameSize];
+    name.toCharArray(wantedName, wantedNameSize);
+
+    bool keyIsFound {false};
     for(int nameIndex = 0; nameIndex < (numberOfKeys*2); nameIndex+=2) {
       String nameFromArr = keysDatabase[nameIndex];
+      int currNameSize = nameFromArr.length();
+      currNameSize += 1;
+      char *currentName = new char[currNameSize];
+      nameFromArr.toCharArray(currentName, currNameSize);
 
-      Serial.print(nameFromArr);
-      Serial.print(" == ");
-      Serial.println(name);
-      if(nameFromArr.equals(name)) {
-        Serial.println("Jest!");
+      if(strcmp(currentName, wantedName) == 0) {
+        keyIsFound = {true};
+        activeKeyIndex = {nameIndex+1};
 
-        activeKeyIndex = nameIndex+1;
-        Serial.println(activeKeyIndex);
+        Serial.println("Key found");
         break;
       }
+
+      delete[] currentName;
+    }
+    delete[] wantedName;
+
+    if(!keyIsFound) {
+      Serial.println("This key does not exist in memory!");
     }
   }
   else if (option == Controller::ADD_NEW) {
@@ -156,9 +189,10 @@ void loop() {
     delete[] keysDatabase;
     keysDatabase = newKeysDB;
     newKeysDB = {nullptr};
+    delay(10);
 
 //!    Get new name and new key:
-    String newKeyName, newKey, newKeyBs32 {};
+    String newKeyName, newKeyBs32 {};
 
     Serial.print("Write name of new key: ");
     Controller::serialFlushCleaner();
@@ -172,8 +206,7 @@ void loop() {
     Serial.print("Name: ");
     Serial.println(newKeyName);
 
-
-    Serial.print("Write new key (in Base32): ");
+    Serial.print("Write new key in Base32: ");
     Controller::serialFlushCleaner();
     while (Serial.available() == 0) {}
     delay(2);
@@ -182,21 +215,16 @@ void loop() {
       newKeyBs32.trim();
     }
     Serial.println("");
-    base32decodeToString(newKeyBs32, newKey);
+    Serial.print("New key: ");
+    Serial.println(newKeyBs32);
 
-    Serial.print("New key Bs32: ");
-    Serial.print(newKeyBs32);
-    Serial.print(" -> ");
-    Serial.println(newKey);
-
-//    Save new data in DB:
+//!    Save new data in DB:
     keysDatabase[(numberOfKeys*2)-2] = {newKeyName};
-    keysDatabase[(numberOfKeys*2)-1] = {newKey};
+    keysDatabase[(numberOfKeys*2)-1] = {newKeyBs32};
 
-    
 //!    Save new array in EEPROM:
-    Serial.println("Writing new key in memory...");
-//    DataController::writeDataToEEPROM(keysDatabase, numberOfKeys);
+//    Serial.println("Writing new key in memory...");
+    DataController::writeDataToEEPROM(keysDatabase, numberOfKeys);
     Serial.println("Done");
   }
   else if (option == Controller::POWEROFF) {

@@ -39,7 +39,7 @@ private:
 
   static int readIntFromEEPROM(int *);
 
-  static void writeStringToEEPROM(int *, const String &, bool nullChar = true);
+  static void writeStringToEEPROM(int *, const String, bool nullChar = false);
 
   static String readStringFromEEPROM(int *, int, bool nullChar = false);
 };
