@@ -7,7 +7,7 @@
 
 // Arduino lib:
 #include <Arduino.h>
-#include "Base32-Decode.h"
+//#include "Base32-Decode.h"
 
 //! Constant maximum hard-code key size
 constexpr uint8_t KEY_SIZE = 30;
@@ -17,7 +17,7 @@ public:
   /*! Function that converts a String variable in Base32 format
    * into a string variable in text format.
    * */
-  static String convBase32ToTxt(String*);
+//  static String convBase32ToTxt(String);
   /*! Function that converts a String variable in text format
    * into an array of bytes in decimal format.
    * */

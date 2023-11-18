@@ -34,7 +34,7 @@ static String* DataController::readDataFromEEPROM(int *numberOfKeys) {
     uint8_t keysNumber = readIntFromEEPROM(&addresIndex);
     (*numberOfKeys) = keysNumber;
     uint8_t maxEEPROMSize = readIntFromEEPROM(addresIndex++);
-    addresIndex++;
+//    addresIndex++;
 
     static String *keys = new String[keysNumber*2];
 
@@ -55,7 +55,7 @@ static String* DataController::readDataFromEEPROM(int *numberOfKeys) {
       char c {'n'};
 
       Serial.print("Do you agree: ");
-      serialFlush();
+      Controller::serialFlushCleaner();
       while(Serial.available() == 0) {}
       delay(2);
       if(Serial.available() > 0) {
@@ -155,11 +155,4 @@ static String DataController::readStringFromEEPROM(int *addrOffset, int size, bo
   String txt = data;
   delete[] data;
   return txt;
-}
-
-
-static void DataController::serialFlush(){
-  while(Serial.available() > 0) {
-    char t = Serial.read();
-  }
 }

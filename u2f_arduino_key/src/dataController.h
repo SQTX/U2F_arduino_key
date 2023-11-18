@@ -7,6 +7,7 @@
 
 #include <Arduino.h>
 #include <EEPROM.h>
+#include "controller.h"
 
 
 class DataController {
@@ -41,8 +42,6 @@ private:
   static void writeStringToEEPROM(int *, const String &, bool nullChar = true);
 
   static String readStringFromEEPROM(int *, int, bool nullChar = false);
-
-  static void serialFlush();
 };
 
 
