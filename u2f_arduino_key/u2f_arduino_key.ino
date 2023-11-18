@@ -203,10 +203,10 @@ void loop() {
       newKeyName.trim();
     }
     Serial.println("");
-//    Serial.print("Name: ");
-//    Serial.println(newKeyName);
+    Serial.print("Name: ");
+    Serial.println(newKeyName);
 
-//    Serial.print("Write new key in Base32: ");
+    Serial.print("Write new key in Base32: ");
     Controller::serialFlushCleaner();
     while (Serial.available() == 0) {}
     delay(2);
@@ -215,6 +215,8 @@ void loop() {
       newKeyBs32.trim();
     }
     Serial.println("");
+    Serial.print("New key: ");
+    Serial.println(newKeyBs32);
 
 //!    Save new data in DB:
     keysDatabase[(numberOfKeys*2)-2] = {newKeyName};
