@@ -70,7 +70,7 @@ void setup() {
     Serial.println("The app gets frozen");
     while (true) {};
   } else {
-    activeKeyIndex = {1};
+    activeKeyIndex = {5};
   }
 }
 
@@ -80,13 +80,20 @@ void loop() {
   int option = Controller::btnDetector(CONTROL_BTN_PIN, BTN_LOOP_COOLDOWN, WAIT_FOR_ANOTHER_CLICK, HOW_LONG_PRESS_BTN);
 
   if(option == Controller::GENERATE_TOKEN) {
+    for(int i = 0; i < numberOfKeys*2 ; i++) {
+      Serial.println(keysDatabase[i]);
+    }
+    Serial.print("Active: ");
+    Serial.println(activeKeyIndex);
+
     String privKey = {keysDatabase[activeKeyIndex]};
+    Serial.print("Key: ");
+    Serial.println(privKey);
 
 //!    Convert StringToChar:
     uint8_t privKeySize = privKey.length();
-    privKeySize += 1;
-    char *keyInChar = new char[privKeySize];
-    privKey.toCharArray(keyInChar, privKeySize);
+    char *keyInChar = new char[privKeySize+1];
+    privKey.toCharArray(keyInChar, privKeySize+1);
 
 //!    Convert char array to byte array:
     int maxout = base32decode(keyInChar, NULL, 0);
@@ -96,10 +103,11 @@ void loop() {
 
     delete[] keyInChar;
 
-//!    Cut off all numbers after 0:
+//!    Cut off all useless numbers after 0:
     uint8_t hmacKey[maxout] = {};
+    int cutAfter = {(privKeySize*5)/8};   // Protection against zeros inside the key
     for(int i = 0; i < maxout; i++) {
-      if(codeInByte[i] == 0) break;
+      if(i >= cutAfter && codeInByte[i] == 0) break;
       hmacKey[i] = codeInByte[i];
     }
 
@@ -186,7 +194,7 @@ void loop() {
     newKeysDB = {nullptr};
 
 //!    Get new name and new key:
-    String newKeyName, newKey, newKeyBs32 {};
+    String newKeyName, newKeyBs32 {};
 
     Serial.print("Write name of new key: ");
     Controller::serialFlushCleaner();
@@ -210,21 +218,15 @@ void loop() {
       newKeyBs32.trim();
     }
     Serial.println("");
-    base32decodeToString(newKeyBs32, newKey);
-
-    Serial.print("New key Bs32: ");
-    Serial.print(newKeyBs32);
-    Serial.print(" -> ");
-    Serial.println(newKey);
 
 //    Save new data in DB:
     keysDatabase[(numberOfKeys*2)-2] = {newKeyName};
-    keysDatabase[(numberOfKeys*2)-1] = {newKey};
+    keysDatabase[(numberOfKeys*2)-1] = {newKeyBs32};
 
     
 //!    Save new array in EEPROM:
     Serial.println("Writing new key in memory...");
-//    DataController::writeDataToEEPROM(keysDatabase, numberOfKeys);
+    DataController::writeDataToEEPROM(keysDatabase, numberOfKeys);
     Serial.println("Done");
   }
   else if (option == Controller::POWEROFF) {
