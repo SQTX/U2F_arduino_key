@@ -33,9 +33,9 @@ constexpr int8_t TIME_ZONE_OFFSET {2};
  * */
 constexpr int8_t RTC_OFFSET {-5};
 // ******************************************************************
-// Example database with Base32 format keys:
-String keysDB[4]{"google", "N7QBAAAJUCPUP37V",
-                 "github", "AWS4R4HCB5Z54SR2"};
+// NOTE: Example database with Base32 format keys:
+//String keysDB[4]{"google", "N7QBAAAJUCPUP37V",
+//                 "github", "AWS4R4HCB5Z54SR2"};
 //               "fb",     "JBSWY3DPEHPK3PXP"         // Example
 
 // ******************************************************************
@@ -62,7 +62,7 @@ void setup() {
 //  EEPROM.write(1, 'o');
 //  EEPROM.write(2, 'o');
 
-  DataController::writeDataToEEPROM(keysDB, 2);
+//  DataController::writeDataToEEPROM(keysDB, 2);
   keysDatabase = DataController::readDataFromEEPROM(&numberOfKeys);
 
 
