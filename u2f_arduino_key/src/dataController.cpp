@@ -8,6 +8,8 @@ static void DataController::writeDataToEEPROM(String *keys, const int numberOfKe
   int addresIndex {0};
 
   addPrefixToEEPROM(&addresIndex);
+//  Serial.print("All keys: ");
+//  Serial.println(numberOfKeys);
   writeIntToEEPROM(&addresIndex, numberOfKeys);
   writeIntToEEPROM(&addresIndex, MAX_SIZE);
 
@@ -16,8 +18,12 @@ static void DataController::writeDataToEEPROM(String *keys, const int numberOfKe
   } else {
 //    Serial.println("DEBUG: Saving is in processing");
     for(int i = 0; i < (numberOfKeys*2); i++) {
-      uint8_t txtSize = keys[i].length() + 1;
+      uint8_t txtSize = keys[i].length();
+//      Serial.print("Save: ");
+//      Serial.println(txtSize);
       writeIntToEEPROM(&addresIndex, txtSize);
+//      Serial.print("Save: ");
+//      Serial.println(keys[i]);
       writeStringToEEPROM(&addresIndex, keys[i]);
     }
   }
@@ -33,14 +39,20 @@ static String* DataController::readDataFromEEPROM(int *numberOfKeys) {
 
     uint8_t keysNumber = readIntFromEEPROM(&addresIndex);
     (*numberOfKeys) = keysNumber;
+//    Serial.print("All keys: ");
+//    Serial.println(keysNumber);
     uint8_t maxEEPROMSize = readIntFromEEPROM(addresIndex++);
 //    addresIndex++;
 
     static String *keys = new String[keysNumber*2];
 
-    for(int i = 0; i < keysNumber*2; i++) {
+    for(int i = 0; i < (keysNumber*2); i++) {
       uint8_t txtSize = readIntFromEEPROM(&addresIndex);
+//      Serial.print("Read: ");
+//      Serial.println(txtSize);
       keys[i] = readStringFromEEPROM(&addresIndex, txtSize);
+//      Serial.print("Read: ");
+//      Serial.println(keys[i]);
     }
 
 //    Serial.println("DEBUG: Reading complited!");
@@ -124,7 +136,7 @@ static int DataController::readIntFromEEPROM(int *addrOffset) {
 }
 
 
-static void DataController::writeStringToEEPROM(int *addrOffset, const String &txt, bool nullChar) {
+static void DataController::writeStringToEEPROM(int *addrOffset, const String txt, bool nullChar) {
   uint8_t size = txt.length();
 
   for (int i = 0; i < size; i++) {
@@ -140,6 +152,8 @@ static void DataController::writeStringToEEPROM(int *addrOffset, const String &t
 
 static String DataController::readStringFromEEPROM(int *addrOffset, int size, bool nullChar) {
   String data {};
+//  Serial.print("ADres: ");
+//  Serial.println(*addrOffset);
 
   for (int i = 0; i < size; i++) {
     data += static_cast<char>(EEPROM.read((*addrOffset) + i));
@@ -150,6 +164,7 @@ static String DataController::readStringFromEEPROM(int *addrOffset, int size, bo
     data += '\0';
     (*addrOffset)++;
   }
-
+//  Serial.print("Size2: ");
+//  Serial.println(data.length());
   return data;
 }

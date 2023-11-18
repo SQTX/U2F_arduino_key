@@ -34,8 +34,9 @@ constexpr int8_t TIME_ZONE_OFFSET {2};
 constexpr int8_t RTC_OFFSET {-5};
 // ******************************************************************
 // Example database with Base32 format keys:
-String keysDB[4]{"text", "JV4VG2LNOBWGKU3FMNZGK5CUPB2EWZLZ",      // "MySimpleSecretTxtKey"
-                 "github", "AWS4R4HCB5Z54SR2"};                   // NONE
+String keysDB[4]{"google", "N7QBAAAJUCPUP37V",
+                 "github", "AWS4R4HCB5Z54SR2"};
+//               "fb",     "JBSWY3DPEHPK3PXP"         // Example
 
 // ******************************************************************
 //! RAM memmory:
@@ -61,7 +62,7 @@ void setup() {
 //  EEPROM.write(1, 'o');
 //  EEPROM.write(2, 'o');
 
-//  DataController::writeDataToEEPROM(keysDB, 2);
+  DataController::writeDataToEEPROM(keysDB, 2);
   keysDatabase = DataController::readDataFromEEPROM(&numberOfKeys);
 
 
@@ -70,7 +71,7 @@ void setup() {
     Serial.println("The app gets frozen");
     while (true) {};
   } else {
-    activeKeyIndex = {5};
+    activeKeyIndex = {1};
   }
 }
 
@@ -80,15 +81,17 @@ void loop() {
   int option = Controller::btnDetector(CONTROL_BTN_PIN, BTN_LOOP_COOLDOWN, WAIT_FOR_ANOTHER_CLICK, HOW_LONG_PRESS_BTN);
 
   if(option == Controller::GENERATE_TOKEN) {
-    for(int i = 0; i < numberOfKeys*2 ; i++) {
-      Serial.println(keysDatabase[i]);
-    }
-    Serial.print("Active: ");
-    Serial.println(activeKeyIndex);
-
+//    for(int i = 0; i < numberOfKeys*2 ; i++) {
+//      Serial.println(keysDatabase[i]);
+//      Serial.print("Size: ");
+//      Serial.println(keysDatabase[i].length());
+//    }
+//    Serial.print("Active: ");
+//    Serial.println(activeKeyIndex);
+//
     String privKey = {keysDatabase[activeKeyIndex]};
-    Serial.print("Key: ");
-    Serial.println(privKey);
+//    Serial.print("Key: ");
+//    Serial.println(privKey);
 
 //!    Convert StringToChar:
     uint8_t privKeySize = privKey.length();
@@ -110,6 +113,12 @@ void loop() {
       if(i >= cutAfter && codeInByte[i] == 0) break;
       hmacKey[i] = codeInByte[i];
     }
+//
+//    for(int i = 0; i < maxout; i++){
+//      Serial.print(hmacKey[i]);
+//      Serial.print(", ");
+//    }
+//    Serial.println("");
 
 //!    Create TOTP object:
     TOTP totp = TOTP(hmacKey, maxout);
@@ -193,6 +202,11 @@ void loop() {
     keysDatabase = newKeysDB;
     newKeysDB = {nullptr};
 
+//    Serial.println("Dane: ");
+//    for(int i = 0; i < (numberOfKeys*2)-2; i++){
+//      Serial.println(keysDatabase[i]);
+//    }
+    delay(10);
 //!    Get new name and new key:
     String newKeyName, newKeyBs32 {};
 
@@ -204,12 +218,11 @@ void loop() {
       newKeyName = Serial.readStringUntil('\n');
       newKeyName.trim();
     }
-    Serial.println("");
-    Serial.print("Name: ");
-    Serial.println(newKeyName);
+//    Serial.println("");
+//    Serial.print("Name: ");
+//    Serial.println(newKeyName);
 
-
-    Serial.print("Write new key (in Base32): ");
+//    Serial.print("Write new key in Base32: ");
     Controller::serialFlushCleaner();
     while (Serial.available() == 0) {}
     delay(2);
@@ -217,15 +230,20 @@ void loop() {
       newKeyBs32 = Serial.readStringUntil('\n');
       newKeyBs32.trim();
     }
-    Serial.println("");
+//    Serial.println("");
+//    Serial.print("Key: ");
+//    Serial.println(newKeyBs32);
 
 //    Save new data in DB:
     keysDatabase[(numberOfKeys*2)-2] = {newKeyName};
     keysDatabase[(numberOfKeys*2)-1] = {newKeyBs32};
 
-    
+    for(int i = 0; i < (numberOfKeys*2); i++){
+      Serial.println(keysDatabase[i]);
+    }
+
 //!    Save new array in EEPROM:
-    Serial.println("Writing new key in memory...");
+//    Serial.println("Writing new key in memory...");
     DataController::writeDataToEEPROM(keysDatabase, numberOfKeys);
     Serial.println("Done");
   }
