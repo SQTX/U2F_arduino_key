@@ -15,7 +15,9 @@ The operating principle is inspired by keys created by _Yubico_.\
 By creating a circuit similar to the one presented in the documentation and utilizing the software provided here, 
 it is possible to develop a personal, more affordable alternative to a U2F key.
 
-![Project photo](./img/u2f_key_v1.jpg)
+<p align="center">
+  <img src="./img/u2f_key_v1.jpg">
+</p>
 
 ---
 ### WARNING
