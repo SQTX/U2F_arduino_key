@@ -27,7 +27,7 @@ Now, all you need to do is connect everything as shown below.
 ### Circuit Diagram
 
 <p align="center">
-  <img src="../img/circuit_diagram.png" width="450">
+  <img src="https://github.com/SQTX/U2F_arduino_key/blob/doc/img/circuit_diagram.png" width="500">
 </p>
 
 ### Instructions
@@ -55,7 +55,7 @@ The lower part of the diagram shows the connection of the button in "pull-up" mo
 a built-in RC filter. \
 
 <p align="center">
-  <img src="../img/btn+rc.png">
+  <img src="https://github.com/SQTX/U2F_arduino_key/blob/doc/img/btn+rc.png">
 </p>
 
 The final connection of the button to pin D7 is optional, but changing it will require 
