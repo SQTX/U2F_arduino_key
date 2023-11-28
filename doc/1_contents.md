@@ -5,5 +5,5 @@
 3. [Electronic Circuit Creation Diagram with Description - **Circuit**](https://github.com/SQTX/U2F_arduino_key/wiki/2_Circuit)
 4. [Software Installation Process Instructions - **Installation**](#installation)
 5. [Software Configuration Description - **Configuration**](https://github.com/SQTX/U2F_arduino_key/wiki/4_Configuration)
-6. [Frequently Asked Questions - **FAQ**](#faq)
+6. [Frequently Asked Questions - **FAQ**](https://github.com/SQTX/U2F_arduino_key/wiki/5_FAQ)
 7. [List of Sources and Libraries Used in the Project - **Sources**](#sources)
