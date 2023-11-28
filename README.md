@@ -2,7 +2,7 @@
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![License: MIT](https://img.shields.io/badge/C%2B%2B-5487C7?style=flat)](https://opensource.org/licenses/MIT)\
-[![arduino-library-badge](https://www.ardu-badge.com/badge/TOTP-library.svg)](https://www.arduino.cc/reference/en/libraries/totp-library/)
+[![arduino-library-badge](https://www.ardu-badge.com/badge/TOTP-Arduino.svg)](https://www.arduino.cc/reference/en/libraries/totp-library/)
 [![arduino-library-badge](https://www.ardu-badge.com/badge/Base32-Decode.svg)](https://www.arduino.cc/reference/en/libraries/base32-decode/)
 [![arduino-library-badge](https://www.ardu-badge.com/badge/DS3231.svg)](https://www.arduino.cc/reference/en/libraries/ds3231/)
 
