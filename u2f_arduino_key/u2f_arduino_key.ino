@@ -51,7 +51,7 @@ void genereteToken();
 void chooseKey();
 void addNewKey();
 
-// Main Arduino functions =============================================================================================
+// Main setup function ================================================================================================
 void setup() {
   pinMode(CONTROL_BTN_PIN, INPUT_PULLUP);   // Set a pin of the action button
   Serial.begin(9600);                       // Set band value
@@ -71,34 +71,37 @@ void setup() {
     Serial.println("Add a new key to memory, please");
     addNewKey();
   } else {
-    activeKeyIndex = {1};
+    activeKeyIndex = {1};     //! The default active key is the first key stored in memory
   }
 }
 
+// Main loop ==========================================================================================================
 void loop() {
   delay(5);
   int option = Controller::btnDetector(CONTROL_BTN_PIN, BTN_LOOP_COOLDOWN, WAIT_FOR_ANOTHER_CLICK, HOW_LONG_PRESS_BTN);
 
-  if(option == Controller::GENERATE_TOKEN) {
-    genereteToken();
-  }
-  else if (option == Controller::CHOOSE_KEY) {
-    chooseKey();
-  }
-  else if (option == Controller::ADD_NEW) {
-    addNewKey();
-  }
-  else if (option == Controller::POWEROFF) {
-    Serial.println("Power off");
-  }
-  else {
-    Serial.println("None option");
+  switch(option) {
+    case Controller::GENERATE_TOKEN:
+      genereteToken();
+      break;
+    case Controller::Controller::CHOOSE_KEY:
+      chooseKey();
+      break;
+    case Controller::Controller::ADD_NEW:
+      addNewKey();
+      break;
+    case Controller::Controller::POWEROFF:
+      Serial.println("Power off");
+      break;
+    default:
+      Serial.println("None option");
+      break;
   }
 
   delay(500);
 }
 
-
+// Main operations ====================================================================================================
 void genereteToken() {
   Serial.print("Active: ");
   Serial.println(keysDatabase[activeKeyIndex-1]);
