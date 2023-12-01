@@ -47,6 +47,10 @@ String *keysDatabase{};     // Database
  * */
 RTClib myRTC;
 
+void genereteToken();
+void chooseKey();
+void addNewKey();
+
 // Main Arduino functions =============================================================================================
 void setup() {
   pinMode(CONTROL_BTN_PIN, INPUT_PULLUP);   // Set a pin of the action button
@@ -64,16 +68,12 @@ void setup() {
 
   if (numberOfKeys == 0) {
     Serial.println("No key in memory!");
-    Serial.println("The app gets frozen");
-    while (true) {};
+    Serial.println("Add a new key to memory, please");
+    addNewKey();
   } else {
     activeKeyIndex = {1};
   }
 }
-
-void genereteToken();
-void chooseKey();
-void addNewKey();
 
 void loop() {
   delay(5);
