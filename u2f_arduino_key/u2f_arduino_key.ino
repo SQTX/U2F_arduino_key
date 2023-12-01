@@ -2,6 +2,7 @@
  * Created by Jakub SQTX Sitarczyk on 21/10/2023.
  * */
 
+// Includes ===========================================================================================================
 // Arduino lib:
 #include <Wire.h>
 #include <DS3231.h>
@@ -14,15 +15,16 @@
 #include "src/dataConverter.h"
 #include "src/dataController.h"
 
+// Configuration ======================================================================================================
+//! HARDWARE:
+constexpr uint8_t CONTROL_BTN_PIN {7};               //! Set the PIN number to which the action button is connected.
 
-// ******************************************************************
-//! Configuration:
-//TODO: Add description
-constexpr uint8_t CONTROL_BTN_PIN{7};
-constexpr uint8_t BTN_LOOP_COOLDOWN {15};   // Second-click-loop delay
-constexpr uint16_t WAIT_FOR_ANOTHER_CLICK {500};       // Time how long sys will be waiting to detected second click
-constexpr uint16_t HOW_LONG_PRESS_BTN {1100};       // Time how long sys will be waiting to detected second click
+//! BTN TIMES:
+constexpr uint16_t WAIT_FOR_ANOTHER_CLICK {500};     //! The maximum time between the first and second click to detect a double-click. Specify the time in MILLISECONDS.
+constexpr uint16_t HOW_LONG_PRESS_BTN {1100};        //! The maximum time the system will wait for the next (second) click before recognizing a single click. [ms]
+constexpr uint8_t BTN_LOOP_COOLDOWN {15};            //! Refresh time for detecting the second click. (It is recommended to leave it at the default setting.)
 
+//! RTC:
 /*! The hour difference between the time zone set to RTC and the UTC time zone [in hours]:
  * CET(summer_time) - UTC = 2 [h]
  * */
@@ -32,37 +34,31 @@ constexpr int8_t TIME_ZONE_OFFSET {2};
  * 1698601110 - 1698601115 = -5 [s]
  * */
 constexpr int8_t RTC_OFFSET {-5};
-// ******************************************************************
-// NOTE: Example database with Base32 format keys:
-//String keysDB[4]{"google", "N7QBAAAJUCPUP37V",
-//                 "github", "AWS4R4HCB5Z54SR2"};
-//               "fb",     "JBSWY3DPEHPK3PXP"         // Example
 
-// ******************************************************************
-//! RAM memmory:
-int numberOfKeys{0};
-int activeKeyIndex{0};
-String *keysDatabase{};
-// ******************************************************************
+// RAM of software ====================================================================================================
+int numberOfKeys{0};        // The total number of stored keys in memory.
+int activeKeyIndex{0};      // Indeks aktualnie aktywnego klucza. Na podstawie tego klucza generowany będzie nowy token
+String *keysDatabase{};     // Database
+
+// Define RTC =========================================================================================================
 /*! Using the DS3231 RTC module requires its prior configuration and setting of the current time
  * from which the RTC will constantly count up. For this, you can use the DS3231.h library and
  * the DS3231_set example.
  * */
 RTClib myRTC;
 
-
+// Main Arduino functions =============================================================================================
 void setup() {
-  pinMode(CONTROL_BTN_PIN, INPUT_PULLUP);
-  Serial.begin(9600);
-  Controller::serialFlushCleaner();        // Clean flush memory
+  pinMode(CONTROL_BTN_PIN, INPUT_PULLUP);   // Set a pin of the action button
+  Serial.begin(9600);                       // Set band value
+  Controller::serialFlushCleaner();        // Clean flush "memory"
   Wire.begin();
 
-//  NOTE: EEPROM reset:
-//  EEPROM.write(0, 'f');
-//  EEPROM.write(1, 'o');
-//  EEPROM.write(2, 'o');
 
-//  DataController::writeDataToEEPROM(keysDB, 2);
+  /*!Loading data from the EEPROM memory of the device into RAM.
+   * If this is the first run of the program, you will be prompted to prepare the memory for cooperation with
+   * the software.
+   */
   keysDatabase = DataController::readDataFromEEPROM(&numberOfKeys);
 
 
