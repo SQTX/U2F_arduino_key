@@ -71,157 +71,22 @@ void setup() {
   }
 }
 
+void genereteToken();
+void chooseKey();
+void addNewKey();
 
 void loop() {
   delay(5);
   int option = Controller::btnDetector(CONTROL_BTN_PIN, BTN_LOOP_COOLDOWN, WAIT_FOR_ANOTHER_CLICK, HOW_LONG_PRESS_BTN);
 
   if(option == Controller::GENERATE_TOKEN) {
-    Serial.print("Active: ");
-    Serial.println(keysDatabase[activeKeyIndex-1]);
-
-
-    String privKey = {keysDatabase[activeKeyIndex]};
-
-//!    Convert StringToChar:
-    uint8_t privKeySize = privKey.length();
-    char *keyInChar = new char[privKeySize+1];
-    privKey.toCharArray(keyInChar, privKeySize+1);
-
-//!    Convert char array to byte array:
-    int maxout = base32decode(keyInChar, NULL, 0);
-    maxout += 1;
-    uint8_t codeInByte[maxout];
-    int r = base32decode(keyInChar, codeInByte, maxout);
-
-    delete[] keyInChar;
-
-//!    Cut off all useless numbers after 0:
-    uint8_t hmacKey[maxout] = {};
-    int cutAfter = {(privKeySize*5)/8};   // Protection against zeros inside the key
-    for(int i = 0; i < maxout; i++) {
-      if(i >= cutAfter && codeInByte[i] == 0) break;
-      hmacKey[i] = codeInByte[i];
-    }
-
-//!    Create TOTP object:
-    TOTP totp = TOTP(hmacKey, maxout);
-
-
-//!    Get currently time from RTC module:
-    DateTime now{myRTC.now()};                                            // Get current time
-    long UnixTimeStep{now.unixtime()};                                    // Replacement in Unix TimeStamp
-    long UTC{UnixTimeStep - (TIME_ZONE_OFFSET * 60 * 60) - RTC_OFFSET};
-
-
-    char *newCode{totp.getCode(UTC)};  // Generate new token
-
-    //! Print token:
-    char code[7];
-    if (strcmp(code, newCode) != 0) {
-      strcpy(code, newCode);
-      Serial.print("Token: ");
-      Serial.println(code);
-    }
+    genereteToken();
   }
   else if (option == Controller::CHOOSE_KEY) {
-    Serial.print("Enter a key name: ");
-
-    String name{};
-    Controller::serialFlushCleaner();
-    while (Serial.available() == 0) {}
-    delay(2);
-    if (Serial.available() > 0) {
-      name = Serial.readStringUntil('\n');
-      name.trim();
-    }
-    Serial.println("");
-
-    Serial.print("Name: ");
-    Serial.println(name);
-
-
-    int wantedNameSize = name.length();
-    wantedNameSize += 1;
-    char *wantedName = new char[wantedNameSize];
-    name.toCharArray(wantedName, wantedNameSize);
-
-    bool keyIsFound {false};
-    for(int nameIndex = 0; nameIndex < (numberOfKeys*2); nameIndex+=2) {
-      String nameFromArr = keysDatabase[nameIndex];
-      int currNameSize = nameFromArr.length();
-      currNameSize += 1;
-      char *currentName = new char[currNameSize];
-      nameFromArr.toCharArray(currentName, currNameSize);
-
-      if(strcmp(currentName, wantedName) == 0) {
-        keyIsFound = {true};
-        activeKeyIndex = {nameIndex+1};
-
-        Serial.println("Key found");
-        break;
-      }
-
-      delete[] currentName;
-    }
-    delete[] wantedName;
-
-    if(!keyIsFound) {
-      Serial.println("This key does not exist in memory!");
-    }
+    chooseKey();
   }
   else if (option == Controller::ADD_NEW) {
-    numberOfKeys += 1;      // Increase numbers of all keys in DB
-
-//!    Create new DB with bigger capacity and copy all old data:
-    static String *newKeysDB = new String[numberOfKeys*2];
-    for(int i = 0; i < (numberOfKeys*2); i++) {
-      if(i == ((numberOfKeys*2)-2) || i == ((numberOfKeys*2)-1)){
-        newKeysDB[i] = {""};
-        continue;
-      }
-      newKeysDB[i] = keysDatabase[i];
-    }
-    delete[] keysDatabase;
-    keysDatabase = newKeysDB;
-    newKeysDB = {nullptr};
-    delay(10);
-
-//!    Get new name and new key:
-    String newKeyName, newKeyBs32 {};
-
-    Serial.print("Write name of new key: ");
-    Controller::serialFlushCleaner();
-    while (Serial.available() == 0) {}
-    delay(2);
-    if (Serial.available() > 0) {
-      newKeyName = Serial.readStringUntil('\n');
-      newKeyName.trim();
-    }
-    Serial.println("");
-    Serial.print("Name: ");
-    Serial.println(newKeyName);
-
-    Serial.print("Write new key in Base32: ");
-    Controller::serialFlushCleaner();
-    while (Serial.available() == 0) {}
-    delay(2);
-    if (Serial.available() > 0) {
-      newKeyBs32 = Serial.readStringUntil('\n');
-      newKeyBs32.trim();
-    }
-    Serial.println("");
-    Serial.print("New key: ");
-    Serial.println(newKeyBs32);
-
-//!    Save new data in DB:
-    keysDatabase[(numberOfKeys*2)-2] = {newKeyName};
-    keysDatabase[(numberOfKeys*2)-1] = {newKeyBs32};
-
-//!    Save new array in EEPROM:
-//    Serial.println("Writing new key in memory...");
-    DataController::writeDataToEEPROM(keysDatabase, numberOfKeys);
-    Serial.println("Done");
+    addNewKey();
   }
   else if (option == Controller::POWEROFF) {
     Serial.println("Power off");
@@ -231,4 +96,157 @@ void loop() {
   }
 
   delay(500);
+}
+
+
+void genereteToken() {
+  Serial.print("Active: ");
+  Serial.println(keysDatabase[activeKeyIndex-1]);
+
+
+  String privKey = {keysDatabase[activeKeyIndex]};
+
+//!    Convert StringToChar:
+  uint8_t privKeySize = privKey.length();
+  char *keyInChar = new char[privKeySize+1];
+  privKey.toCharArray(keyInChar, privKeySize+1);
+
+//!    Convert char array to byte array:
+  int maxout = base32decode(keyInChar, NULL, 0);
+  maxout += 1;
+  uint8_t codeInByte[maxout];
+  int r = base32decode(keyInChar, codeInByte, maxout);
+
+  delete[] keyInChar;
+
+//!    Cut off all useless numbers after 0:
+  uint8_t hmacKey[maxout] = {};
+  int cutAfter = {(privKeySize*5)/8};   // Protection against zeros inside the key
+  for(int i = 0; i < maxout; i++) {
+    if(i >= cutAfter && codeInByte[i] == 0) break;
+    hmacKey[i] = codeInByte[i];
+  }
+
+//!    Create TOTP object:
+  TOTP totp = TOTP(hmacKey, maxout);
+
+
+//!    Get currently time from RTC module:
+  DateTime now{myRTC.now()};                                            // Get current time
+  long UnixTimeStep{now.unixtime()};                                    // Replacement in Unix TimeStamp
+  long UTC{UnixTimeStep - (TIME_ZONE_OFFSET * 60 * 60) - RTC_OFFSET};
+
+
+  char *newCode{totp.getCode(UTC)};  // Generate new token
+
+  //! Print token:
+  char code[7];
+  if (strcmp(code, newCode) != 0) {
+    strcpy(code, newCode);
+    Serial.print("Token: ");
+    Serial.println(code);
+  }
+}
+
+
+void chooseKey() {
+  Serial.print("Enter a key name: ");
+
+  String name{};
+  Controller::serialFlushCleaner();
+  while (Serial.available() == 0) {}
+  delay(2);
+  if (Serial.available() > 0) {
+    name = Serial.readStringUntil('\n');
+    name.trim();
+  }
+  Serial.println("");
+
+  Serial.print("Name: ");
+  Serial.println(name);
+
+
+  int wantedNameSize = name.length();
+  wantedNameSize += 1;
+  char *wantedName = new char[wantedNameSize];
+  name.toCharArray(wantedName, wantedNameSize);
+
+  bool keyIsFound {false};
+  for(int nameIndex = 0; nameIndex < (numberOfKeys*2); nameIndex+=2) {
+    String nameFromArr = keysDatabase[nameIndex];
+    int currNameSize = nameFromArr.length();
+    currNameSize += 1;
+    char *currentName = new char[currNameSize];
+    nameFromArr.toCharArray(currentName, currNameSize);
+
+    if(strcmp(currentName, wantedName) == 0) {
+      keyIsFound = {true};
+      activeKeyIndex = {nameIndex+1};
+
+      Serial.println("Key found");
+      break;
+    }
+
+    delete[] currentName;
+  }
+  delete[] wantedName;
+
+  if(!keyIsFound) {
+    Serial.println("This key does not exist in memory!");
+  }
+}
+
+
+void addNewKey() {
+  numberOfKeys += 1;      // Increase numbers of all keys in DB
+
+//!    Create new DB with bigger capacity and copy all old data:
+  static String *newKeysDB = new String[numberOfKeys*2];
+  for(int i = 0; i < (numberOfKeys*2); i++) {
+    if(i == ((numberOfKeys*2)-2) || i == ((numberOfKeys*2)-1)){
+      newKeysDB[i] = {""};
+      continue;
+    }
+    newKeysDB[i] = keysDatabase[i];
+  }
+  delete[] keysDatabase;
+  keysDatabase = newKeysDB;
+  newKeysDB = {nullptr};
+  delay(10);
+
+//!    Get new name and new key:
+  String newKeyName, newKeyBs32 {};
+
+  Serial.print("Write name of new key: ");
+  Controller::serialFlushCleaner();
+  while (Serial.available() == 0) {}
+  delay(2);
+  if (Serial.available() > 0) {
+    newKeyName = Serial.readStringUntil('\n');
+    newKeyName.trim();
+  }
+  Serial.println("");
+  Serial.print("Name: ");
+  Serial.println(newKeyName);
+
+  Serial.print("Write new key in Base32: ");
+  Controller::serialFlushCleaner();
+  while (Serial.available() == 0) {}
+  delay(2);
+  if (Serial.available() > 0) {
+    newKeyBs32 = Serial.readStringUntil('\n');
+    newKeyBs32.trim();
+  }
+  Serial.println("");
+  Serial.print("New key: ");
+  Serial.println(newKeyBs32);
+
+//!    Save new data in DB:
+  keysDatabase[(numberOfKeys*2)-2] = {newKeyName};
+  keysDatabase[(numberOfKeys*2)-1] = {newKeyBs32};
+
+//!    Save new array in EEPROM:
+//    Serial.println("Writing new key in memory...");
+  DataController::writeDataToEEPROM(keysDatabase, numberOfKeys);
+  Serial.println("Done");
 }
