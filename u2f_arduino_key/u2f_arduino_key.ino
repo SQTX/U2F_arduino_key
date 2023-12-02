@@ -42,9 +42,9 @@ int numberOfKeys{0};        // The total number of stored keys in memory.
 int activeKeyIndex{0};      // Indeks aktualnie aktywnego klucza. Na podstawie tego klucza generowany będzie nowy token
 String *keysDatabase{};     // Database
 
-//*****************************
-//Paste the SampleCode1 here!!!
-//*****************************
+//*******************************
+//! Paste the SampleCode1 here!!!
+//*******************************
 
 
 // Defined RTC =========================================================================================================
@@ -68,9 +68,9 @@ void setup() {
   Controller::serialFlushCleaner();        // Clean flush "memory"
   Wire.begin();
 
-//  *****************************
-//  Paste the SampleCode2 here!!!
-//  *****************************
+//  *******************************
+//!  Paste the SampleCode2 here!!!
+//  *******************************
 
   /*!Loading data from the EEPROM memory of the device into RAM.
    * If this is the first run of the program, you will be prompted to prepare the memory for cooperation with
