@@ -1,5 +1,5 @@
 //
-// Created by Jakub Sitarczyk on 12/11/2023.
+// Created by Jakub SQTX Sitarczyk on 12/11/2023.
 //
 
 #ifndef U2F_ARDUINO_KEY_CONTROLLER_H
