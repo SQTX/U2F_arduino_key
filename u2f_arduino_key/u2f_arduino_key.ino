@@ -83,6 +83,7 @@ void setup() {
     Serial.println("No key in memory!");
     Serial.println("Add a new key to memory, please");
     addNewKey();
+    activeKeyIndex = {1};
   } else {
     activeKeyIndex = {1};     //! The default active key is the first key stored in memory
   }
