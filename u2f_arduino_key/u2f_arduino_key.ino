@@ -40,13 +40,18 @@ int numberOfKeys{0};        // The total number of stored keys in memory.
 int activeKeyIndex{0};      // Indeks aktualnie aktywnego klucza. Na podstawie tego klucza generowany będzie nowy token
 String *keysDatabase{};     // Database
 
-// Define RTC =========================================================================================================
+//*****************************
+//Paste the SampleCode1 here!!!
+//*****************************
+
+// Defined RTC =========================================================================================================
 /*! Using the DS3231 RTC module requires its prior configuration and setting of the current time
  * from which the RTC will constantly count up. For this, you can use the DS3231.h library and
  * the DS3231_set example.
  * */
 RTClib myRTC;
 
+// Defined main operations =============================================================================================
 void genereteToken();
 void chooseKey();
 void addNewKey();
@@ -58,6 +63,9 @@ void setup() {
   Controller::serialFlushCleaner();        // Clean flush "memory"
   Wire.begin();
 
+//  *****************************
+//  Paste the SampleCode2 here!!!
+//  *****************************
 
   /*!Loading data from the EEPROM memory of the device into RAM.
    * If this is the first run of the program, you will be prompted to prepare the memory for cooperation with
@@ -92,6 +100,7 @@ void loop() {
       break;
     case Controller::Controller::POWEROFF:
       Serial.println("Power off");
+      while(true) {}
       break;
     default:
       Serial.println("None option");
@@ -244,12 +253,11 @@ void addNewKey() {
   Serial.print("New key: ");
   Serial.println(newKeyBs32);
 
-//!    Save new data in DB:
+//  Save new data (name and key) in DB:
   keysDatabase[(numberOfKeys*2)-2] = {newKeyName};
   keysDatabase[(numberOfKeys*2)-1] = {newKeyBs32};
 
-//!    Save new array in EEPROM:
-//    Serial.println("Writing new key in memory...");
+//  Save new array in EEPROM:
   DataController::writeDataToEEPROM(keysDatabase, numberOfKeys);
   Serial.println("Done");
 }
