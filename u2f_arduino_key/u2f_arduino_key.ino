@@ -15,6 +15,7 @@
 #include "src/dataConverter.h"
 #include "src/dataController.h"
 
+
 // Configuration ======================================================================================================
 //! HARDWARE:
 constexpr uint8_t CONTROL_BTN_PIN {7};               //! Set the PIN number to which the action button is connected.
@@ -35,6 +36,7 @@ constexpr int8_t TIME_ZONE_OFFSET {2};
  * */
 constexpr int8_t RTC_OFFSET {-5};
 
+
 // RAM of software ====================================================================================================
 int numberOfKeys{0};        // The total number of stored keys in memory.
 int activeKeyIndex{0};      // Indeks aktualnie aktywnego klucza. Na podstawie tego klucza generowany będzie nowy token
@@ -44,6 +46,7 @@ String *keysDatabase{};     // Database
 //Paste the SampleCode1 here!!!
 //*****************************
 
+
 // Defined RTC =========================================================================================================
 /*! Using the DS3231 RTC module requires its prior configuration and setting of the current time
  * from which the RTC will constantly count up. For this, you can use the DS3231.h library and
@@ -51,10 +54,12 @@ String *keysDatabase{};     // Database
  * */
 RTClib myRTC;
 
+
 // Defined main operations =============================================================================================
 void genereteToken();
 void chooseKey();
 void addNewKey();
+
 
 // Main setup function ================================================================================================
 void setup() {
@@ -83,6 +88,7 @@ void setup() {
   }
 }
 
+
 // Main loop ==========================================================================================================
 void loop() {
   delay(5);
@@ -110,48 +116,51 @@ void loop() {
   delay(500);
 }
 
+
 // Main operations ====================================================================================================
+//! Function generates a token based on the active key
 void genereteToken() {
+//  Print name of active key:
   Serial.print("Active: ");
   Serial.println(keysDatabase[activeKeyIndex-1]);
 
 
-  String privKey = {keysDatabase[activeKeyIndex]};
+  String privKey = {keysDatabase[activeKeyIndex]};  // Get key from DB
 
-//!    Convert StringToChar:
+//  Convert String to char array:
   uint8_t privKeySize = privKey.length();
   char *keyInChar = new char[privKeySize+1];
   privKey.toCharArray(keyInChar, privKeySize+1);
 
-//!    Convert char array to byte array:
+//  Convert char array to byte array:
   int maxout = base32decode(keyInChar, NULL, 0);
   maxout += 1;
   uint8_t codeInByte[maxout];
   int r = base32decode(keyInChar, codeInByte, maxout);
 
-  delete[] keyInChar;
+  delete[] keyInChar;   // Delete dynamically declared character array
 
-//!    Cut off all useless numbers after 0:
+//  Cut off all useless numbers after 0:
   uint8_t hmacKey[maxout] = {};
-  int cutAfter = {(privKeySize*5)/8};   // Protection against zeros inside the key
+  int cutAfter = {(privKeySize*5)/8};   // Protection against removing zeros inside the key
   for(int i = 0; i < maxout; i++) {
     if(i >= cutAfter && codeInByte[i] == 0) break;
     hmacKey[i] = codeInByte[i];
   }
 
-//!    Create TOTP object:
+//  Create TOTP object:
   TOTP totp = TOTP(hmacKey, maxout);
 
 
-//!    Get currently time from RTC module:
-  DateTime now{myRTC.now()};                                            // Get current time
-  long UnixTimeStep{now.unixtime()};                                    // Replacement in Unix TimeStamp
+//  Get currently time from RTC module:
+  DateTime now{myRTC.now()};                                          // Get current time
+  long UnixTimeStep{now.unixtime()};                                  // Replacement in Unix TimeStamp
   long UTC{UnixTimeStep - (TIME_ZONE_OFFSET * 60 * 60) - RTC_OFFSET};
 
 
-  char *newCode{totp.getCode(UTC)};  // Generate new token
+  char *newCode{totp.getCode(UTC)};                                   // Generate new token
 
-  //! Print token:
+//  Print token:
   char code[7];
   if (strcmp(code, newCode) != 0) {
     strcpy(code, newCode);
@@ -160,10 +169,12 @@ void genereteToken() {
   }
 }
 
-
+// ******************************************************
+//! Function locate a key by name and set it as active
 void chooseKey() {
   Serial.print("Enter a key name: ");
 
+//  Get key name from a user:
   String name{};
   Controller::serialFlushCleaner();
   while (Serial.available() == 0) {}
@@ -177,7 +188,7 @@ void chooseKey() {
   Serial.print("Name: ");
   Serial.println(name);
 
-
+//  Finding and comparing the got name with the names saved in DB:
   int wantedNameSize = name.length();
   wantedNameSize += 1;
   char *wantedName = new char[wantedNameSize];
@@ -208,11 +219,12 @@ void chooseKey() {
   }
 }
 
-
+// ******************************************************
+//! Function adds a new key to the database and saves it in EEPROM memory
 void addNewKey() {
   numberOfKeys += 1;      // Increase numbers of all keys in DB
 
-//!    Create new DB with bigger capacity and copy all old data:
+//  Create new DB with bigger capacity than previous and transfer all data:
   static String *newKeysDB = new String[numberOfKeys*2];
   for(int i = 0; i < (numberOfKeys*2); i++) {
     if(i == ((numberOfKeys*2)-2) || i == ((numberOfKeys*2)-1)){
@@ -222,11 +234,11 @@ void addNewKey() {
     newKeysDB[i] = keysDatabase[i];
   }
   delete[] keysDatabase;
-  keysDatabase = newKeysDB;
-  newKeysDB = {nullptr};
+  keysDatabase = newKeysDB;   // Assigned the address of the new DB to the pointer of the old one
+  newKeysDB = {nullptr};      // Reset the new pointer
   delay(10);
 
-//!    Get new name and new key:
+//  Get a new name and a new key (in Base32 format):
   String newKeyName, newKeyBs32 {};
 
   Serial.print("Write name of new key: ");
